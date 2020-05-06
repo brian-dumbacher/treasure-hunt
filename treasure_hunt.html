@@ -1,0 +1,1720 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Treasure Hunt!</title>
+</head>
+
+<body bgcolor="#CCCCCC">
+
+<!--
+<div id="divTitle" style="margin: 0 auto; text-align: center;">
+<h1 id="textTitle" style="font-family:arial;">Treasure Hunt!</h1>
+</div>
+-->
+
+<div id="divCanvases" style="position:relative; border:2px solid black; margin: 0 auto; width: 600px; height: 600px;">
+<canvas id="canvasBG" style="z-index: 1; position:absolute; left:0px; top:0px;"></canvas>
+<canvas id="canvasFG" style="z-index: 2; position:absolute; left:0px; top:0px;"></canvas>
+<canvas id="canvasWG" style="z-index: 3; position:absolute; left:0px; top:0px;"></canvas>
+<canvas id="canvasMG" style="z-index: 4; position:absolute; left:0px; top:0px;"></canvas>
+</div>
+
+<div id="divInstruct" style="margin: 0 auto; text-align: left; width: 600px;">
+<p id="textInstruct" style="font-family:arial;">You and your fellow townspeople are on the hunt for treasure.  Use the arrow keys to move and the space bar to interact with the environment.  Press the space bar to begin your hunt.</p>
+</div>
+
+<script type="text/javascript">
+
+/*
+* RPG
+* @author Brian Dumbacher
+*/
+
+// Global constants and variables
+window.onload = intro;
+const STAGE_DIM = 600;
+const NUM_TILES = 20;
+const TILE_DIM = STAGE_DIM / NUM_TILES;
+const PLAYER_DIM = TILE_DIM/2;
+const NUM_WEATHERS = 3;
+const FPS = 60;
+// Colors
+const COL_BLACK = "rgb(0,0,0)";
+const COL_BROWN_DARK = "rgb(90,70,10)";
+const COL_BROWN_FENCE = "rgb(100,100,30)";
+const COL_RED_ROOF = "rgb(230,100,70)";
+const COL_GRASS = "rgb(60,220,40)";
+const COL_GRASS_DARK = "rgb(50,160,40)";
+const COL_GREEN = "rgb(0,255,0)";
+const COL_ORANGE = "rgb(255,160,0)";
+const COL_PATH = "rgb(230,230,200)";
+const COL_RED = "rgb(255,0,0)";
+const COL_SAND = "rgb(255,220,90)";
+const COL_TREE = "rgb(0,90,0)";
+const COL_WHITE = "rgb(255,255,255)";
+const COL_YELLOW = "rgb(255,255,0)";
+// Images
+var imgCloud;
+const imgCloudWidth = 200;
+const imgCloudHeight = 100;
+var imgGrass;
+var imgIntro;
+var imgMessages;
+const imgMessageWidth = 600;
+const imgMessageHeight = 200;
+var imgMonument;
+var imgShip;
+var imgX;
+// Game state, canvases, objects, and maps
+var gameState;
+var loopInterval;
+var bg;
+var fg;
+var wg;
+var mg;
+var tiles;
+var player;
+var weathers;
+var message;
+
+/*
+be: Beach 
+bf: Bridge over fresh water
+bg: Building
+bo: Bridge over ocean
+e1: Estuary one
+e2: Estuary two
+e3: Estuary three
+fe: Fence
+fi: Field
+fw: Fresh water
+gr: Grass
+hb: Brian's house
+ho: House
+lh: Lighthouse
+mo: monument
+oc: Ocean
+pa: Path
+px: Path intersection 
+sa: Sand
+sf: Ship over fresh water
+sg: Sandy grass
+so: Ship over ocean
+tr: Tree
+xx: X marks the spot
+*/
+
+const WORLD_WIDTH = 2;
+const WORLD_HEIGHT = 3;
+var world;
+
+// Seaside forest
+var map_0_0 = [["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0"],
+               ["oc_0", "e3_0", "oc_0", "oc_0", "oc_0", "tr_0", "tr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0"],
+               ["oc_0", "oc_0", "oc_0", "e3_0", "oc_0", "oc_0", "e3_0", "gr_0", "gr_0", "gr_0", "ho_0", "gr_0", "gr_0", "gr_0", "tr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "e3_0", "e3_0", "e3_0", "e2_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0"],
+               ["oc_0", "oc_0", "oc_0", "e3_0", "oc_0", "oc_0", "e3_0", "e2_0", "e2_0", "e2_0", "e1_0", "e1_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0"],
+               ["oc_0", "e3_0", "oc_0", "oc_0", "oc_0", "e3_0", "e3_0", "e3_0", "e2_0", "e1_0", "e1_0", "fw_0", "fw_0", "e1_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0"],
+               ["oc_0", "oc_0", "oc_0", "e3_0", "oc_0", "oc_0", "e3_0", "e2_0", "e2_0", "e2_0", "e1_0", "e1_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "e3_0", "e3_0", "e3_0", "e2_0", "e1_0", "e1_0", "fw_0", "fw_0", "e1_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0"],
+               ["oc_0", "oc_0", "oc_0", "e3_0", "oc_0", "oc_0", "e3_0", "e2_0", "e2_0", "e2_0", "e1_0", "e1_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0"],
+               ["oc_0", "e3_0", "so_1", "so_2", "oc_0", "e3_0", "e3_0", "e3_0", "e2_0", "e1_0", "e1_0", "fw_0", "fw_0", "e1_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0"],
+               ["oc_0", "oc_0", "oc_0", "e3_0", "oc_0", "oc_0", "e3_0", "e2_0", "e2_0", "e2_0", "e1_0", "e1_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "e3_0", "e3_0", "e3_0", "e2_0", "e1_0", "e1_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "pa_6", "pa_2", "pa_2"],
+               ["oc_0", "oc_0", "oc_0", "e3_0", "oc_0", "oc_0", "e3_0", "e2_0", "e2_0", "e2_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "pa_1", "tr_0", "tr_0"],
+               ["oc_0", "e3_0", "oc_0", "oc_0", "oc_0", "e3_0", "e3_0", "e3_0", "e2_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "pa_1", "tr_0", "tr_0"],
+               ["oc_0", "oc_0", "oc_0", "e3_0", "oc_0", "oc_0", "e3_0", "e2_0", "tr_0", "tr_0", "tr_0", "gr_0", "gr_0", "tr_0", "tr_0", "tr_0", "tr_0", "pa_1", "tr_0", "tr_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "e3_0", "e3_0", "tr_0", "tr_0", "tr_0", "tr_0", "gr_0", "gr_0", "tr_0", "tr_0", "tr_0", "tr_0", "pa_1", "tr_0", "tr_0"],
+               ["oc_0", "oc_0", "oc_0", "e3_0", "oc_0", "gr_0", "gr_0", "pa_2", "pa_2", "pa_2", "pa_2", "pa_2", "pa_2", "pa_2", "pa_2", "pa_2", "pa_2", "px_4", "tr_0", "tr_0"],
+               ["oc_0", "e3_0", "oc_0", "oc_0", "oc_0", "oc_0", "gr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "pa_1", "tr_0", "tr_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "pa_1", "tr_0", "tr_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "pa_1", "tr_0", "tr_0"]];
+
+// River
+var map_0_1 = [["tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0"],
+               ["gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "ho_0", "tr_0", "ho_0", "ho_0", "bg_0", "ho_0", "tr_0", "tr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0"],
+               ["gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "pa_2", "pa_2", "pa_2", "pa_2", "pa_2", "pa_2", "pa_2", "pa_3", "gr_0", "gr_0", "gr_0", "tr_0", "gr_0", "tr_0"],
+               ["gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "pa_1", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0"],
+               ["fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "bf_1", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0"],
+               ["fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "bf_1", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0"],
+               ["fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "bf_1", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0"],
+               ["fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "bf_1", "sf_1", "sf_2", "fw_0", "fw_0", "fw_0", "fw_0", "bf_1", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0"],
+               ["fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "bf_1", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "bf_1", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0"],
+               ["tr_0", "tr_0", "gr_0", "gr_0", "gr_0", "bg_0", "pa_1", "tr_0", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0", "pa_1", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0"],
+               ["tr_0", "tr_0", "gr_0", "gr_0", "gr_0", "bg_0", "pa_1", "ho_0", "tr_0", "ho_0", "bg_0", "tr_0", "ho_0", "pa_1", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0"],
+               ["pa_2", "pa_2", "pa_2", "pa_2", "pa_2", "pa_2", "px_5", "pa_2", "pa_2", "pa_2", "pa_2", "pa_2", "pa_2", "px_4", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0"],
+               ["tr_0", "tr_0", "tr_0", "tr_0", "ho_0", "bg_0", "pa_1", "tr_0", "bg_0", "ho_0", "ho_0", "tr_0", "bg_0", "pa_1", "fe_6", "fe_2", "fe_2", "fe_2", "fe_3", "tr_0"],
+               ["tr_0", "tr_0", "gr_0", "gr_0", "gr_0", "bg_0", "pa_1", "bg_0", "gr_0", "gr_0", "gr_0", "gr_0", "ho_0", "pa_1", "fe_1", "gr_0", "fw_0", "tr_0", "fe_1", "tr_0"],
+               ["tr_0", "tr_0", "gr_0", "gr_0", "gr_0", "ho_0", "pa_1", "ho_0", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0", "pa_1", "fe_1", "gr_0", "gr_0", "gr_0", "fe_1", "tr_0"],
+               ["tr_0", "tr_0", "gr_0", "gr_0", "gr_0", "tr_0", "pa_1", "ho_0", "gr_0", "gr_0", "gr_0", "gr_0", "ho_0", "px_2", "pa_2", "pa_2", "pa_2", "gr_0", "fe_1", "tr_0"],
+               ["tr_0", "tr_0", "gr_0", "gr_0", "gr_0", "ho_0", "pa_1", "tr_0", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0", "pa_1", "fe_1", "tr_0", "ho_0", "tr_0", "fe_1", "tr_0"],
+               ["tr_0", "tr_0", "gr_0", "gr_0", "gr_0", "bg_0", "pa_1", "tr_0", "gr_0", "gr_0", "gr_0", "gr_0", "ho_0", "pa_1", "fe_1", "gr_0", "gr_0", "gr_0", "fe_1", "tr_0"],
+               ["tr_0", "tr_0", "gr_0", "gr_0", "gr_0", "tr_0", "pa_1", "ho_0", "gr_0", "gr_0", "gr_0", "gr_0", "ho_0", "pa_1", "fe_1", "fi_0", "fi_0", "fi_0", "fe_1", "tr_0"],
+               ["tr_0", "tr_0", "gr_0", "gr_0", "gr_0", "ho_0", "pa_1", "tr_0", "gr_0", "gr_0", "gr_0", "gr_0", "ho_0", "pa_1", "fe_5", "fe_2", "fe_2", "fe_2", "fe_4", "tr_0"]];
+
+// Home
+var map_1_0 = [["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "pa_1", "tr_0", "tr_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "pa_1", "tr_0", "tr_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0", "tr_0", "gr_0", "gr_0", "gr_0", "pa_1", "fe_6", "fe_2"],
+               ["oc_0", "oc_0", "lh_0", "gr_0", "sg_4", "sg_5", "sg_6", "gr_0", "gr_0", "fi_0", "fi_0", "gr_0", "tr_0", "tr_0", "gr_0", "gr_0", "tr_0", "pa_1", "fe_1", "fi_0"],
+               ["oc_0", "oc_0", "gr_0", "gr_0", "oc_0", "be_7", "sg_7", "gr_0", "gr_0", "fi_0", "fi_0", "gr_0", "gr_0", "tr_0", "tr_0", "gr_0", "gr_0", "pa_1", "fe_1", "fi_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "sg_1", "sg_8", "gr_0", "gr_0", "fi_0", "fi_0", "gr_0", "gr_0", "tr_0", "tr_0", "gr_0", "gr_0", "pa_1", "fe_1", "fi_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0", "gr_0", "gr_0", "pa_1", "fe_1", "fi_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "hb_0", "gr_0", "fw_0", "gr_0", "tr_0", "tr_0", "gr_0", "pa_1", "fe_1", "fi_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "gr_0", "gr_0", "gr_0", "gr_0", "pa_2", "pa_2", "pa_2", "pa_2", "pa_2", "pa_2", "pa_2", "px_4", "fe_1", "fi_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0", "tr_0", "gr_0", "pa_1", "fe_5", "fe_2"],
+               ["oc_0", "tr_0", "gr_0", "bo_2", "bo_2", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0", "gr_0", "gr_0", "gr_0", "tr_0", "tr_0", "gr_0", "gr_0", "px_2", "pa_2", "pa_2"],
+               ["oc_0", "sg_4", "sg_5", "oc_0", "oc_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0", "gr_0", "gr_0", "tr_0", "gr_0", "gr_0", "gr_0", "pa_1", "fe_6", "fe_2"],
+               ["oc_0", "sg_3", "be_4", "oc_0", "oc_0", "be_7", "sa_0", "sg_7", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0", "tr_0", "gr_0", "gr_0", "gr_0", "pa_1", "fe_1", "fi_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "be_7", "sa_0", "sg_7", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0", "tr_0", "tr_0", "gr_0", "gr_0", "pa_1", "fe_1", "fi_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "be_7", "sa_0", "sg_7", "gr_0", "gr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "gr_0", "pa_1", "fe_1", "fi_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "be_7", "sa_0", "sg_7", "gr_0", "tr_0", "tr_0", "tr_0", "tr_0", "gr_0", "gr_0", "gr_0", "gr_0", "pa_1", "fe_1", "gr_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0", "gr_0", "gr_0", "gr_0", "gr_0", "fw_0", "fw_0", "gr_0", "pa_1", "fe_1", "fi_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "gr_0", "gr_0", "tr_0", "tr_0", "gr_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "gr_0", "pa_1", "fe_1", "fi_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "gr_0", "gr_0", "gr_0", "tr_0", "tr_0", "gr_0", "fw_0", "fw_0", "fw_0", "ho_0", "ho_0", "gr_0", "pa_1", "fe_5", "fe_2"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "pa_1", "tr_0", "tr_0"]];
+
+// Town
+var map_1_1 = [["tr_0", "tr_0", "gr_0", "gr_0", "gr_0", "tr_0", "pa_1", "ho_0", "gr_0", "gr_0", "gr_0", "gr_0", "ho_0", "pa_1", "tr_0", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0"],
+               ["tr_0", "tr_0", "gr_0", "gr_0", "gr_0", "tr_0", "pa_1", "tr_0", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0", "pa_1", "ho_0", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0"],
+               ["fe_2", "fe_2", "fe_2", "fe_2", "fe_2", "fe_3", "pa_1", "fe_6", "fe_2", "fe_2", "fe_3", "tr_0", "tr_0", "pa_1", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0"],
+               ["fi_0", "fi_0", "gr_0", "fi_0", "fi_0", "fe_1", "pa_1", "fe_1", "fw_0", "fw_0", "fe_1", "gr_0", "ho_0", "pa_1", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0"],
+               ["fi_0", "fi_0", "gr_0", "fi_0", "fi_0", "fe_1", "pa_1", "fe_1", "gr_0", "gr_0", "fe_1", "gr_0", "ho_0", "pa_1", "tr_0", "tr_0", "tr_0", "tr_0", "gr_0", "tr_0"],
+               ["fi_0", "fi_0", "gr_0", "fi_0", "fi_0", "fe_1", "pa_1", "tr_0", "gr_0", "fi_0", "fe_1", "gr_0", "gr_0", "pa_1", "bg_0", "tr_0", "gr_0", "gr_0", "gr_0", "tr_0"],
+               ["fi_0", "fi_0", "gr_0", "fi_0", "fi_0", "fe_1", "pa_1", "ho_0", "gr_0", "fi_0", "fe_1", "gr_0", "tr_0", "pa_1", "ho_0", "tr_0", "gr_0", "xx_0", "gr_0", "tr_0"],
+               ["fi_0", "gr_0", "gr_0", "gr_0", "fi_0", "fe_1", "pa_1", "tr_0", "gr_0", "fi_0", "fe_1", "gr_0", "gr_0", "pa_1", "tr_0", "tr_0", "gr_0", "gr_0", "gr_0", "tr_0"],
+               ["fi_0", "gr_0", "ho_0", "gr_0", "fi_0", "fe_1", "pa_1", "fe_1", "gr_0", "fi_0", "fe_1", "tr_0", "bg_0", "pa_1", "ho_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0"],
+               ["fe_2", "fe_2", "pa_1", "fe_2", "fe_2", "fe_4", "pa_1", "fe_5", "fe_2", "fe_2", "fe_4", "ho_0", "pa_6", "px_1", "pa_3", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0"],
+               ["pa_2", "pa_2", "px_1", "pa_2", "pa_2", "pa_2", "px_5", "pa_2", "pa_2", "pa_2", "pa_2", "pa_2", "px_4", "tr_0", "pa_1", "fw_0", "fw_0", "mo_0", "gr_0", "tr_0"],
+               ["fe_2", "fe_2", "fe_2", "fe_2", "fe_2", "fe_3", "pa_1", "tr_0", "ho_0", "tr_0", "ho_0", "ho_0", "pa_5", "px_3", "pa_4", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0"],
+               ["fi_0", "fi_0", "fi_0", "fi_0", "fi_0", "fe_1", "pa_1", "ho_0", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0", "pa_1", "ho_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0"],
+               ["fi_0", "fi_0", "fi_0", "fi_0", "fi_0", "fe_1", "pa_1", "ho_0", "gr_0", "gr_0", "gr_0", "gr_0", "bg_0", "pa_1", "bg_0", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0"],
+               ["fi_0", "fi_0", "fi_0", "gr_0", "gr_0", "fe_1", "pa_1", "tr_0", "gr_0", "gr_0", "gr_0", "gr_0", "ho_0", "pa_1", "bg_0", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0"],
+               ["gr_0", "gr_0", "gr_0", "gr_0", "ho_0", "pa_2", "px_4", "tr_0", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0", "pa_1", "ho_0", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0"],
+               ["fi_0", "fi_0", "fi_0", "gr_0", "gr_0", "fe_1", "pa_1", "ho_0", "gr_0", "gr_0", "gr_0", "gr_0", "bg_0", "pa_1", "tr_0", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0"],
+               ["fi_0", "fi_0", "fi_0", "fi_0", "fi_0", "fe_1", "pa_1", "tr_0", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0", "pa_1", "ho_0", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0"],
+               ["fe_2", "fe_2", "fe_2", "fe_2", "fe_2", "fe_4", "pa_1", "tr_0", "gr_0", "gr_0", "gr_0", "gr_0", "ho_0", "pa_1", "tr_0", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0"],
+               ["tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "pa_1", "ho_0", "gr_0", "gr_0", "gr_0", "gr_0", "ho_0", "pa_1", "bg_0", "gr_0", "gr_0", "gr_0", "gr_0", "tr_0"]];
+
+// Main island
+var map_2_0 = [["oc_0", "oc_0", "oc_0", "oc_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "pa_1", "tr_0", "tr_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "be_7", "sg_7", "gr_0", "ho_0", "tr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "pa_1", "tr_0", "tr_0"],
+               ["oc_0", "oc_0", "oc_0", "tr_0", "tr_0", "tr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "pa_6", "pa_2", "pa_2", "pa_2", "pa_2", "px_1", "pa_2", "pa_2"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "tr_0", "tr_0", "tr_0", "tr_0", "gr_0", "gr_0", "gr_0", "gr_0", "pa_1", "gr_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "bo_1", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "bo_1", "oc_0", "oc_0", "oc_0", "oc_0", "tr_0", "oc_0", "oc_0"],
+               ["oc_0", "oc_0", "oc_0", "tr_0", "tr_0", "tr_0", "tr_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "bo_1", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0"],
+               ["oc_0", "oc_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "oc_0", "oc_0", "bo_1", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0"],
+               ["oc_0", "oc_0", "oc_0", "tr_0", "gr_0", "gr_0", "tr_0", "tr_0", "tr_0", "tr_0", "gr_0", "gr_0", "pa_1", "gr_0", "gr_0", "gr_0", "gr_0", "oc_0", "oc_0", "oc_0"],
+               ["oc_0", "oc_0", "oc_0", "gr_0", "gr_0", "gr_0", "tr_0", "tr_0", "gr_0", "gr_0", "gr_0", "gr_0", "pa_1", "tr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "ho_0", "ho_0", "ho_0", "pa_1", "tr_0", "tr_0", "ho_0", "ho_0", "gr_0", "gr_0", "gr_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "gr_0", "tr_0", "pa_6", "pa_2", "pa_2", "pa_2", "pa_2", "pa_2", "px_5", "pa_2", "pa_2", "pa_2", "pa_2", "pa_2", "pa_2", "pa_2"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "gr_0", "gr_0", "pa_1", "gr_0", "gr_0", "fw_0", "fw_0", "tr_0", "pa_1", "sg_4", "sg_5", "sg_5", "sg_5", "sg_6", "gr_0", "gr_0"],
+               ["oc_0", "oc_0", "oc_0", "gr_0", "gr_0", "gr_0", "pa_1", "gr_0", "gr_0", "fw_0", "tr_0", "tr_0", "pa_1", "sg_3", "be_4", "be_5", "be_6", "sg_7", "gr_0", "gr_0"],
+               ["oc_0", "oc_0", "oc_0", "be_7", "sg_7", "gr_0", "xx_0", "gr_0", "gr_0", "tr_0", "tr_0", "tr_0", "pa_1", "ho_0", "sg_3", "be_3", "be_7", "sg_7", "tr_0", "gr_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "fe_1", "gr_0", "gr_0", "sg_3", "be_3", "be_7", "sg_7", "tr_0", "gr_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "gr_0", "gr_0", "sg_5", "sg_5", "gr_0", "gr_0", "gr_0", "fe_1", "gr_0", "sg_3", "be_3", "oc_0", "be_7", "sg_7", "gr_0", "gr_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "gr_0", "gr_0", "be_5", "be_5", "gr_0", "oc_0", "oc_0", "oc_0", "oc_0", "gr_0", "gr_0", "oc_0", "gr_0", "gr_0", "gr_0", "oc_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0"]];
+
+// Small islands
+var map_2_1 = [["tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "pa_1", "ho_0", "gr_0", "gr_0", "gr_0", "gr_0", "bg_0", "pa_1", "ho_0", "gr_0", "gr_0", "gr_0", "tr_0", "tr_0"],
+               ["tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "pa_1", "ho_0", "tr_0", "bg_0", "ho_0", "bg_0", "tr_0", "pa_1", "ho_0", "bg_0", "tr_0", "ho_0", "tr_0", "tr_0"],
+               ["pa_2", "pa_2", "pa_2", "pa_2", "pa_2", "pa_2", "px_1", "pa_2", "pa_2", "pa_2", "pa_2", "pa_2", "pa_2", "px_1", "pa_2", "pa_2", "pa_2", "pa_2", "tr_0", "tr_0"],
+               ["oc_0", "oc_0", "tr_0", "tr_0", "gr_0", "gr_0", "gr_0", "ho_0", "bg_0", "ho_0", "tr_0", "bg_0", "bg_0", "ho_0", "bg_0", "ho_0", "tr_0", "tr_0", "tr_0", "tr_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "tr_0", "tr_0", "tr_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "tr_0", "tr_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "tr_0", "tr_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "tr_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "gr_0", "gr_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "gr_0", "gr_0", "gr_0", "oc_0", "oc_0", "oc_0", "oc_0"],
+               ["gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "gr_0", "gr_0", "oc_0", "oc_0", "oc_0", "oc_0"],
+               ["gr_0", "tr_0", "tr_0", "tr_0", "tr_0", "gr_0", "gr_0", "gr_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "gr_0", "gr_0", "oc_0", "oc_0", "oc_0"],
+               ["pa_2", "pa_2", "pa_2", "pa_2", "pa_2", "pa_2", "pa_3", "gr_0", "oc_0", "oc_0", "oc_0", "gr_0", "gr_0", "oc_0", "oc_0", "tr_0", "gr_0", "oc_0", "oc_0", "oc_0"],
+               ["gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "pa_1", "gr_0", "oc_0", "oc_0", "tr_0", "gr_0", "tr_0", "oc_0", "oc_0", "oc_0", "gr_0", "oc_0", "oc_0", "oc_0"],
+               ["gr_0", "tr_0", "tr_0", "tr_0", "fw_0", "gr_0", "pa_1", "gr_0", "bo_2", "bo_2", "gr_0", "gr_0", "gr_0", "bo_2", "bo_2", "bo_2", "gr_0", "gr_0", "oc_0", "oc_0"],
+               ["gr_0", "tr_0", "tr_0", "tr_0", "fw_0", "gr_0", "pa_1", "gr_0", "oc_0", "oc_0", "oc_0", "oc_0", "gr_0", "oc_0", "oc_0", "oc_0", "gr_0", "tr_0", "oc_0", "oc_0"],
+               ["gr_0", "tr_0", "tr_0", "tr_0", "tr_0", "gr_0", "gr_0", "gr_0", "oc_0", "oc_0", "oc_0", "oc_0", "bo_1", "oc_0", "oc_0", "oc_0", "oc_0", "tr_0", "oc_0", "oc_0"],
+               ["gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "oc_0", "oc_0", "oc_0", "oc_0", "bo_1", "be_1", "be_1", "be_1", "oc_0", "oc_0", "oc_0", "oc_0"],
+               ["oc_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "oc_0", "oc_0", "oc_0", "oc_0", "sa_0", "sa_0", "sa_0", "sa_0", "sa_0", "oc_0", "oc_0", "oc_0", "oc_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "be_5", "be_5", "be_5", "be_5", "be_5", "oc_0", "oc_0", "oc_0", "oc_0"],
+               ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0"]];
+
+
+// Seaside forest
+var int_0_0 = [[ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 12, 12, 12,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 12,  0, 12,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 11,  0,  0, 12, 12, 12,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 14, 14,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 14, 14,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0, 13, 13,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0, 13,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0]];
+
+// River
+var int_0_1 = [[ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 22, 22, 22,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0, 21,  0,  0,  0,  0,  0,  0, 22,  0, 22,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 22, 22, 22,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 24,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 24,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 24,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0, 23,  0,  0,  0,  0,  0,  0, 24,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0, 23,  0,  0,  0,  0,  0,  0, 24,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 26,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0, 25,  0,  0,  0,  0,  0,  0,  0,  0,  0, 27,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0]];
+
+// Home
+var int_1_0 = [[ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0, 31,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0, 31, 31,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 32,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0, 33,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0, 33, 33,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0, 33,  0,  0,  0,  0, 34,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0, 34,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0, 34,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0, 34,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 35,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 35,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0]];
+
+// Town
+var int_1_1 = [[ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 41,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 43,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 43,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 43, 43,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0, 42,  0,  0,  0,  0, 43,  0,  0,  0,  0,  0, 44,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 43, 43,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0, 45,  0,  0,  0,  0,  0,  0,  0,  0,  0, 46, 46, 46,  0,  0, 47, 47,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 46,  0, 46,  0,  0,  0, 47,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 46, 46, 46,  0,  0, 47, 47,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0, 48,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 49,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0]];
+
+// Main island
+var int_2_0 = [[ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0, 51,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 53,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0, 52,  0,  0,  0,  0,  0,  0,  0, 54,  0,  0, 55,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 54, 54,  0,  0, 55,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0]];
+
+// Small islands
+var int_2_1 = [[ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0, 61, 61, 61, 61, 61, 61, 61, 61, 61,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 66, 66,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 66, 66,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 64, 64,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0, 62, 62,  0,  0,  0,  0,  0, 64,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0, 62,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0, 62,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0, 63,  0,  0,  0,  0,  0,  0, 65, 65, 65, 65, 65,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0],
+               [ 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0]];
+
+/*
+Introduction and initialization
+*/
+
+function intro(){
+     // Game state
+     gameState = "intro";
+     // Background canvas
+     var canvasBG = document.getElementById("canvasBG");
+     canvasBG.width = STAGE_DIM;
+     canvasBG.height = STAGE_DIM;
+     bg = canvasBG.getContext('2d');
+     // Foreground canvas
+     var canvasFG = document.getElementById("canvasFG");
+     canvasFG.width = STAGE_DIM;
+     canvasFG.height = STAGE_DIM;
+     fg = canvasFG.getContext('2d');
+     // Weather canvas
+     var canvasWG = document.getElementById("canvasWG");
+     canvasWG.width = STAGE_DIM;
+     canvasWG.height = STAGE_DIM;
+     wg = canvasWG.getContext('2d');
+     // Message canvas
+     var canvasMG = document.getElementById("canvasMG");
+     canvasMG.width = STAGE_DIM;
+     canvasMG.height = STAGE_DIM;
+     mg = canvasMG.getContext('2d');
+     // Images
+     imgCloud = new Image();
+     imgCloud.src = "cloud.png";
+     imgGrass = new Image();
+     imgGrass.src = "grass.png";
+     imgIntro = new Image();
+     imgIntro.src = "intro.png";
+     imgIntro.onload = function(){bg.drawImage(imgIntro, 0, 0, STAGE_DIM, STAGE_DIM, 0, 0, STAGE_DIM, STAGE_DIM);}
+     imgMessages = new Image();
+     imgMessages.src = "messages.png";
+     imgMonument = new Image();
+     imgMonument.src = "monument.png";
+     imgShip = new Image();
+     imgShip.src = "ship.png";
+     imgX = new Image();
+     imgX.src = "x.png";
+     // Event listeners
+     window.addEventListener("keydown", onKeyDown);
+     window.addEventListener("keyup", onKeyUp);
+}
+
+/*
+Event listeners
+*/
+
+function onKeyDown(e){
+     if (gameState == "walk"){
+          switch (e.keyCode){
+               case 37:
+                    player.isMovingLeft = true;
+                    break;
+               case 39:
+                    player.isMovingRight = true;
+                    break;
+               case 38:
+                    player.isMovingUp = true;
+                    break;
+               case 40:
+                    player.isMovingDown = true;
+                    break;
+          }
+     }
+}
+
+function onKeyUp(e){
+     if (gameState == "intro"){
+          switch (e.keyCode){
+               // Space bar
+               case 32:
+                    bg.clearRect(0, 0, STAGE_DIM, STAGE_DIM);
+                    // World
+                    world = new World(1, 0);
+                    // Initialize tiles, player, weather elements, and message
+                    initTiles();
+                    drawTiles();
+                    player = new Player(STAGE_DIM/2 + (TILE_DIM - PLAYER_DIM)/2, STAGE_DIM/2 + (TILE_DIM - PLAYER_DIM)/2);
+                    player.draw();
+                    initWeathers();
+                    drawWeathers();
+                    message = new Message();
+                    // Game state
+                    gameState = "walk";
+                    loopInterval = setInterval(loop, 1000/FPS);
+                    break;
+          }
+     } else if (gameState == "walk"){
+          switch (e.keyCode){
+               // Space bar
+               case 32:
+                    if (player.canInteract){
+                         player.isMovingLeft = false;
+                         player.isMovingRight = false;
+                         player.isMovingUp = false;
+                         player.isMovingDown = false;
+                         gameState = "message";
+                         message.draw();
+                    }
+                    break;
+               case 37:
+                    player.isMovingLeft = false;
+                    break;
+               case 39:
+                    player.isMovingRight = false;
+                    break;
+               case 38:
+                    player.isMovingUp = false;
+                    break;
+               case 40:
+                    player.isMovingDown = false;
+                    break;
+          }
+     } else if (gameState == "message"){
+          switch (e.keyCode){
+               // Space bar
+               case 32:
+                    if (player.canInteract){
+                         message.clear();
+                         gameState = "walk";
+                    }
+                    break;
+          }
+     }
+}
+
+/*
+Loop
+*/
+
+function loop(){
+     if (gameState == "walk"){
+          // Map
+          world.update();
+     }
+     // Tiles
+     clearTiles();
+     updateTiles();
+     drawTiles();
+     if (gameState == "walk"){
+          // Player
+          player.clear();
+          player.update();
+          player.draw();
+     }
+     // Weather
+     clearWeathers();
+     updateWeathers();
+     drawWeathers();
+}
+
+/*
+World
+*/
+
+function World(iStart, jStart){
+     this.init = function(){
+          this.maps = [];
+          this.ints = [];
+          for (var i=0; i<WORLD_HEIGHT; i++){
+               this.maps.push([]);
+               this.ints.push([]);
+               for (var j=0; j<WORLD_WIDTH; j++){
+                    eval("this.maps[" + i + "].push(map_" + i + "_" + j + ");");
+                    eval("this.ints[" + i + "].push(int_" + i + "_" + j + ");");
+               }
+          }
+          this.iWorld = iStart;
+          this.jWorld = jStart;
+          this.map = this.maps[this.iWorld][this.jWorld];
+          this.int = this.ints[this.iWorld][this.jWorld];
+     }
+
+     this.update = function(){
+          if (player.x <= -player.width/2){
+               this.jWorld -= 1;
+               player.x = STAGE_DIM - player.width;
+               this.map = this.maps[this.iWorld][this.jWorld];
+               this.int = this.ints[this.iWorld][this.jWorld];
+               initTiles();
+               initWeathers();
+          } else if (player.x >= STAGE_DIM - player.width/2){
+               this.jWorld += 1;
+               player.x = 0;
+               this.map = this.maps[this.iWorld][this.jWorld];
+               this.int = this.ints[this.iWorld][this.jWorld];
+               initTiles();
+               initWeathers();
+          } else if (player.y <= -player.height/2){
+               this.iWorld -= 1;
+               player.y = STAGE_DIM - player.height;
+               this.map = this.maps[this.iWorld][this.jWorld];
+               this.int = this.ints[this.iWorld][this.jWorld];
+               initTiles();
+               initWeathers();
+          } else if (player.y >= STAGE_DIM - player.height/2){
+               this.iWorld += 1;
+               player.y = 0;
+               this.map = this.maps[this.iWorld][this.jWorld];
+               this.int = this.ints[this.iWorld][this.jWorld];
+               initTiles();
+               initWeathers();
+          }
+     }
+
+     this.init();
+}
+
+/*
+Tiles
+*/
+
+function Tile(codeAppear, codeInt, x, y){
+     this.init = function(){
+          var codeAppearList = codeAppear.split("_");
+          this.type = codeAppearList[0];
+          this.dir = codeAppearList[1];
+          this.int = codeInt;
+          this.x = x;
+          this.y = y;
+          // Random numbers for tiles that use them
+          this.rng1 = Math.random();
+          this.rng2 = Math.random();
+          // Default color ranges
+          this.r0 = 255;
+          this.r1 = 255;
+          this.g0 = 255;
+          this.g1 = 255;
+          this.b0 = 255;
+          this.b1 = 255;
+          // Tile properties and color ranges
+          switch (this.type){
+               case "be": // Beach
+                    this.isWalkable = false;
+                    this.redraw = true;
+                    this.r0 = 100;
+                    this.r1 = 250;
+                    this.g0 = 220;
+                    this.g1 = 220;
+                    this.b0 = 220;
+                    this.b1 = 250;
+                    break;
+               case "bf": // Bridge over fresh water
+                    this.isWalkable = true;
+                    this.redraw = true;
+                    this.r0 = 0;
+                    this.r1 = 70;
+                    this.g0 = 100;
+                    this.g1 = 140;
+                    this.b0 = 200;
+                    this.b1 = 200;
+                    break;
+               case "bg": // Building
+                    this.isWalkable = false;
+                    this.redraw = false;
+                    this.r0 = 200;
+                    this.r1 = 255;
+                    this.g0 = 200;
+                    this.g1 = 255;
+                    this.b0 = 200;
+                    this.b1 = 200;
+                    break;
+               case "bo": // Bridge over ocean
+                    this.isWalkable = true;
+                    this.redraw = true;
+                    this.r0 = 100;
+                    this.r1 = 250;
+                    this.g0 = 220;
+                    this.g1 = 220;
+                    this.b0 = 220;
+                    this.b1 = 250;
+                    break;
+               case "e1": // Estuary one
+                    this.isWalkable = false;
+                    this.redraw = true;
+                    this.r0 = 70;
+                    this.r1 = 80;
+                    this.g0 = 140;
+                    this.g1 = 165;
+                    this.b0 = 200;
+                    this.b1 = 205;
+                    break;
+               case "e2": // Estuary two
+                    this.isWalkable = false;
+                    this.redraw = true;
+                    this.r0 = 80;
+                    this.r1 = 90;
+                    this.g0 = 165;
+                    this.g1 = 195;
+                    this.b0 = 205;
+                    this.b1 = 215;
+                    break;
+               case "e3": // Estuary three
+                    this.isWalkable = false;
+                    this.redraw = true;
+                    this.r0 = 90;
+                    this.r1 = 100;
+                    this.g0 = 195;
+                    this.g1 = 220;
+                    this.b0 = 215;
+                    this.b1 = 220;
+                    break;
+               case "fe": // Fence
+                    this.isWalkable = false;
+                    this.redraw = false;
+                    break;
+               case "fi": // Field
+                    this.isWalkable = true;
+                    this.redraw = false;
+                    break;
+               case "fw": // Fresh water
+                    this.isWalkable = false;
+                    this.redraw = true;
+                    this.r0 = 0;
+                    this.r1 = 70;
+                    this.g0 = 100;
+                    this.g1 = 140;
+                    this.b0 = 200;
+                    this.b1 = 200;
+                    break;
+               case "gr": // Grass
+                    this.isWalkable = true;
+                    this.redraw = false;
+                    break;
+               case "hb": // Brian's house
+                    this.isWalkable = false;
+                    this.redraw = false;
+                    break;
+               case "ho": // House
+                    this.isWalkable = false;
+                    this.redraw = false;
+                    this.r0 = 215;
+                    this.r1 = 255;
+                    this.g0 = 215;
+                    this.g1 = 255;
+                    this.b0 = 215;
+                    this.b1 = 200;
+                    break;
+               case "lh": // Lighthouse
+                    this.isWalkable = false;
+                    this.redraw = true;
+                    break;
+               case "mo": // Monument
+                    this.isWalkable = false;
+                    this.redraw = false;
+                    break;
+               case "oc": // Ocean
+                    this.isWalkable = false;
+                    this.redraw = true;
+                    this.r0 = 100;
+                    this.r1 = 250;
+                    this.g0 = 220;
+                    this.g1 = 220;
+                    this.b0 = 220;
+                    this.b1 = 250;
+                    break;
+               case "pa": // Path
+                    this.isWalkable = true;
+                    this.redraw = false;
+                    break;
+               case "px": // Path intersection
+                    this.isWalkable = true;
+                    this.redraw = false;
+                    break;
+               case "sa": // Sand
+                    this.isWalkable = true;
+                    this.redraw = false;
+                    break;
+               case "sf": // Ship over fresh water
+                    this.isWalkable = false;
+                    this.redraw = true;
+                    this.r0 = 0;
+                    this.r1 = 70;
+                    this.g0 = 100;
+                    this.g1 = 140;
+                    this.b0 = 200;
+                    this.b1 = 200;
+                    break;
+               case "sg": // Sandy grass
+                    this.isWalkable = true;
+                    this.redraw = false;
+                    break;
+               case "so": // Ship over ocean
+                    this.isWalkable = false;
+                    this.redraw = true;
+                    this.r0 = 100;
+                    this.r1 = 250;
+                    this.g0 = 220;
+                    this.g1 = 220;
+                    this.b0 = 220;
+                    this.b1 = 250;
+                    break;
+               case "tr": // Tree
+                    this.isWalkable = false;
+                    this.redraw = false;
+                    this.r0 = 0;
+                    this.r1 = 0;
+                    this.g0 = 60;
+                    this.g1 = 150;
+                    this.b0 = 0;
+                    this.b1 = 0;
+                    break;
+               case "xx": // X marks the spot
+                    this.isWalkable = true;
+                    this.redraw = false;
+                    break;
+          }
+          this.r = this.getRandomColorValue(this.r0, this.r1);
+          this.rt = this.getRandomColorValue(this.r0, this.r1);
+          this.g = this.getRandomColorValue(this.g0, this.g1);
+          this.gt = this.getRandomColorValue(this.g0, this.g1);
+          this.b = this.getRandomColorValue(this.b0, this.b1);
+          this.bt = this.getRandomColorValue(this.b0, this.b1);
+     }
+
+     this.draw = function(){
+          switch (this.type){
+               case "be": // Beach
+                    switch (this.dir){
+                         case "7":
+                              var grd = bg.createLinearGradient(this.x + TILE_DIM, this.y, this.x, this.y);
+                              break;
+                         case "3":
+                              var grd = bg.createLinearGradient(this.x, this.y, this.x + TILE_DIM, this.y);
+                              break;
+                         case "1":
+                              var grd = bg.createLinearGradient(this.x, this.y + TILE_DIM, this.x, this.y);
+                              break;
+                         case "5":
+                              var grd = bg.createLinearGradient(this.x, this.y, this.x, this.y + TILE_DIM);
+                              break;
+                         case "8":
+                              var grd = bg.createLinearGradient(this.x + 2*TILE_DIM/3, this.y + 2*TILE_DIM/3, this.x, this.y);
+                              break;
+                         case "4":
+                              var grd = bg.createLinearGradient(this.x + TILE_DIM/3, this.y + TILE_DIM/3, this.x + TILE_DIM, this.y + TILE_DIM);
+                              break;
+                         case "2":
+                              var grd = bg.createLinearGradient(this.x + TILE_DIM/3, this.y + 2*TILE_DIM/3, this.x + TILE_DIM, this.y);
+                              break;
+                         case "6":
+                              var grd = bg.createLinearGradient(this.x + 2*TILE_DIM/3, this.y + TILE_DIM/3, this.x, this.y + TILE_DIM);
+                              break;
+                    }
+                    grd.addColorStop(0, COL_SAND);
+                    grd.addColorStop(1, this.getRGB());
+                    bg.fillStyle = grd;
+                    bg.fillRect(this.x, this.y, TILE_DIM, TILE_DIM);
+                    break;
+               case "bf": // Bridge over fresh water
+                    bg.fillStyle = this.getRGB();
+                    bg.fillRect(this.x, this.y, TILE_DIM, TILE_DIM);
+                    bg.globalAlpha = 0.25;
+                    bg.fillStyle = COL_WHITE;
+                    bg.fillRect(this.x, this.y, TILE_DIM, TILE_DIM);
+                    bg.globalAlpha = 1;
+                    switch (this.dir){
+                         case "1":
+                              bg.strokeStyle = COL_BROWN_DARK;
+                              bg.beginPath();
+                              bg.moveTo(this.x + TILE_DIM/3, this.y);
+                              bg.lineTo(this.x + TILE_DIM/3, this.y + TILE_DIM);
+                              bg.stroke();
+                              bg.strokeStyle = COL_BROWN_DARK;
+                              bg.beginPath();
+                              bg.moveTo(this.x + 2*TILE_DIM/3, this.y);
+                              bg.lineTo(this.x + 2*TILE_DIM/3, this.y + TILE_DIM);
+                              bg.stroke();
+                              bg.beginPath();
+                              bg.fillStyle = COL_BROWN_DARK;
+                              bg.fillRect(this.x + TILE_DIM/6, this.y, 4*TILE_DIM/6, TILE_DIM/6);
+                              bg.fillRect(this.x + TILE_DIM/6, this.y + 2*TILE_DIM/6, 4*TILE_DIM/6, 2*TILE_DIM/6);
+                              bg.fillRect(this.x + TILE_DIM/6, this.y + 5*TILE_DIM/6, 4*TILE_DIM/6, TILE_DIM/6);
+                              break;
+                         case "2":
+                              bg.strokeStyle = COL_BROWN_DARK;
+                              bg.beginPath();
+                              bg.moveTo(this.x, this.y + TILE_DIM/3);
+                              bg.lineTo(this.x + TILE_DIM, this.y + TILE_DIM/3);
+                              bg.stroke();
+                              bg.strokeStyle = COL_BROWN_DARK;
+                              bg.beginPath();
+                              bg.moveTo(this.x, this.y + 2*TILE_DIM/3);
+                              bg.lineTo(this.x + TILE_DIM, this.y + 2*TILE_DIM/3);
+                              bg.stroke();
+                              bg.beginPath();
+                              bg.fillStyle = COL_BROWN_DARK;
+                              bg.fillRect(this.x, this.y + TILE_DIM/6, TILE_DIM/6, 4*TILE_DIM/6);
+                              bg.fillRect(this.x + 2*TILE_DIM/6, this.y + TILE_DIM/6, 2*TILE_DIM/6, 4*TILE_DIM/6);
+                              bg.fillRect(this.x + 5*TILE_DIM/6, this.y + TILE_DIM/6, TILE_DIM/6, 4*TILE_DIM/6);
+                              break;
+                    }
+                    break;
+               case "bg": // Building
+                    // Tile
+                    var grd = bg.createRadialGradient(this.x + TILE_DIM/2, this.y + TILE_DIM, 0, this.x + TILE_DIM/2, this.y + TILE_DIM, TILE_DIM);
+                    grd.addColorStop(0, COL_GRASS_DARK);
+                    grd.addColorStop(1, COL_GRASS);
+                    bg.fillStyle = grd
+                    bg.fillRect(this.x, this.y, TILE_DIM, TILE_DIM);
+                    // House
+                    bg.fillStyle = this.getRGB();
+                    bg.fillRect(this.x + TILE_DIM/7, this.y, 5*TILE_DIM/7, 6*TILE_DIM/7);
+                    if (this.rng1 < 0.5){
+                         // Lower window
+                         bg.fillStyle = COL_BLACK;
+                         bg.fillRect(this.x + 2*TILE_DIM/7, this.y + 3*TILE_DIM/7, TILE_DIM/7, TILE_DIM/7);
+                         // Door
+                         bg.fillStyle = COL_BLACK;
+                         bg.fillRect(this.x + 4*TILE_DIM/7, this.y + 3*TILE_DIM/7, TILE_DIM/7, 3*TILE_DIM/7);
+                    } else {
+                         // Lower window
+                         bg.fillStyle = COL_BLACK;
+                         bg.fillRect(this.x + 4*TILE_DIM/7, this.y + 3*TILE_DIM/7, TILE_DIM/7, TILE_DIM/7);
+                         // Door
+                         bg.fillStyle = COL_BLACK;
+                         bg.fillRect(this.x + 2*TILE_DIM/7, this.y + 3*TILE_DIM/7, TILE_DIM/7, 3*TILE_DIM/7);
+                    }
+                    // Upper windows
+                    bg.fillStyle = COL_BLACK;
+                    bg.fillRect(this.x + 2*TILE_DIM/7, this.y + TILE_DIM/7, TILE_DIM/7, TILE_DIM/7);
+                    bg.fillRect(this.x + 4*TILE_DIM/7, this.y + TILE_DIM/7, TILE_DIM/7, TILE_DIM/7);
+                    break;
+               case "bo": // Bridge over ocean
+                    bg.fillStyle = this.getRGB();
+                    bg.fillRect(this.x, this.y, TILE_DIM, TILE_DIM);
+                    switch (this.dir){
+                         case "1":
+                              bg.strokeStyle = COL_BROWN_DARK;
+                              bg.beginPath();
+                              bg.moveTo(this.x + TILE_DIM/3, this.y);
+                              bg.lineTo(this.x + TILE_DIM/3, this.y + TILE_DIM);
+                              bg.stroke();
+                              bg.strokeStyle = COL_BROWN_DARK;
+                              bg.beginPath();
+                              bg.moveTo(this.x + 2*TILE_DIM/3, this.y);
+                              bg.lineTo(this.x + 2*TILE_DIM/3, this.y + TILE_DIM);
+                              bg.stroke();
+                              bg.beginPath();
+                              bg.fillStyle = COL_BROWN_DARK;
+                              bg.fillRect(this.x + TILE_DIM/6, this.y, 4*TILE_DIM/6, TILE_DIM/6);
+                              bg.fillRect(this.x + TILE_DIM/6, this.y + 2*TILE_DIM/6, 4*TILE_DIM/6, 2*TILE_DIM/6);
+                              bg.fillRect(this.x + TILE_DIM/6, this.y + 5*TILE_DIM/6, 4*TILE_DIM/6, TILE_DIM/6);
+                              break;
+                         case "2":
+                              bg.strokeStyle = COL_BROWN_DARK;
+                              bg.beginPath();
+                              bg.moveTo(this.x, this.y + TILE_DIM/3);
+                              bg.lineTo(this.x + TILE_DIM, this.y + TILE_DIM/3);
+                              bg.stroke();
+                              bg.strokeStyle = COL_BROWN_DARK;
+                              bg.beginPath();
+                              bg.moveTo(this.x, this.y + 2*TILE_DIM/3);
+                              bg.lineTo(this.x + TILE_DIM, this.y + 2*TILE_DIM/3);
+                              bg.stroke();
+                              bg.beginPath();
+                              bg.fillStyle = COL_BROWN_DARK;
+                              bg.fillRect(this.x, this.y + TILE_DIM/6, TILE_DIM/6, 4*TILE_DIM/6);
+                              bg.fillRect(this.x + 2*TILE_DIM/6, this.y + TILE_DIM/6, 2*TILE_DIM/6, 4*TILE_DIM/6);
+                              bg.fillRect(this.x + 5*TILE_DIM/6, this.y + TILE_DIM/6, TILE_DIM/6, 4*TILE_DIM/6);
+                              break;
+                    }
+                    break;
+               case "fe": // Fence
+                    if (this.rng1 < 0.5){
+                         bg.fillStyle = COL_GRASS;
+                         bg.fillRect(this.x, this.y, TILE_DIM, TILE_DIM);
+                    } else if (this.rng1 < 0.625){
+                         bg.drawImage(imgGrass, 0, 0, TILE_DIM, TILE_DIM, this.x, this.y, TILE_DIM, TILE_DIM);
+                    } else if (this.rng1 < 0.75){
+                         bg.drawImage(imgGrass, 30, 0, TILE_DIM, TILE_DIM, this.x, this.y, TILE_DIM, TILE_DIM);
+                    } else if (this.rng1 < 0.875){
+                         bg.drawImage(imgGrass, 60, 0, TILE_DIM, TILE_DIM, this.x, this.y, TILE_DIM, TILE_DIM);
+                    } else {
+                         bg.drawImage(imgGrass, 90, 0, TILE_DIM, TILE_DIM, this.x, this.y, TILE_DIM, TILE_DIM);
+                    }
+                    bg.fillStyle = COL_BROWN_FENCE;
+                    switch (this.dir){
+                         case "1":
+                              bg.fillRect(this.x + TILE_DIM/2, this.y, TILE_DIM/8, 3*TILE_DIM/8);
+                              bg.fillRect(this.x + 3*TILE_DIM/8, this.y + TILE_DIM/8, TILE_DIM/8, 6*TILE_DIM/8);
+                              bg.fillRect(this.x + TILE_DIM/2, this.y + 5*TILE_DIM/8, TILE_DIM/8, 3*TILE_DIM/8);
+                              break;
+                         case "2":
+                              bg.fillRect(this.x, this.y + TILE_DIM/2, 3*TILE_DIM/8, TILE_DIM/8);
+                              bg.fillRect(this.x + TILE_DIM/8, this.y + 3*TILE_DIM/8, 6*TILE_DIM/8, TILE_DIM/8);
+                              bg.fillRect(this.x + 5*TILE_DIM/8, this.y + TILE_DIM/2, 3*TILE_DIM/8, TILE_DIM/8);
+                              break;
+                         case "3":
+                              bg.fillRect(this.x + TILE_DIM/8, this.y + 3*TILE_DIM/8, 4*TILE_DIM/8, 2*TILE_DIM/8);
+                              bg.fillRect(this.x + 3*TILE_DIM/8, this.y + 3*TILE_DIM/8, 2*TILE_DIM/8, 4*TILE_DIM/8);
+                              bg.fillRect(this.x, this.y + 4*TILE_DIM/8, 4*TILE_DIM/8, TILE_DIM/8);
+                              bg.fillRect(this.x + 4*TILE_DIM/8, this.y + 4*TILE_DIM/8, TILE_DIM/8, 4*TILE_DIM/8);
+                              break;
+                         case "4":
+                              bg.fillRect(this.x + 3*TILE_DIM/8, this.y + TILE_DIM/8, 2*TILE_DIM/8, 4*TILE_DIM/8);
+                              bg.fillRect(this.x + TILE_DIM/8, this.y + 3*TILE_DIM/8, 4*TILE_DIM/8, 2*TILE_DIM/8);
+                              bg.fillRect(this.x + 4*TILE_DIM/8, this.y, TILE_DIM/8, 4*TILE_DIM/8);
+                              bg.fillRect(this.x, this.y + 4*TILE_DIM/8, 4*TILE_DIM/8, TILE_DIM/8);
+                              break;
+                         case "5":
+                              bg.fillRect(this.x + 3*TILE_DIM/8, this.y + TILE_DIM/8, 2*TILE_DIM/8, 4*TILE_DIM/8);
+                              bg.fillRect(this.x + 3*TILE_DIM/8, this.y + 3*TILE_DIM/8, 4*TILE_DIM/8, 2*TILE_DIM/8);
+                              bg.fillRect(this.x + 4*TILE_DIM/8, this.y, TILE_DIM/8, 4*TILE_DIM/8);
+                              bg.fillRect(this.x + 4*TILE_DIM/8, this.y + 4*TILE_DIM/8, 4*TILE_DIM/8, TILE_DIM/8);
+                              break;
+                         case "6":
+                              bg.fillRect(this.x + 3*TILE_DIM/8, this.y + 3*TILE_DIM/8, 4*TILE_DIM/8, 2*TILE_DIM/8);
+                              bg.fillRect(this.x + 3*TILE_DIM/8, this.y + 3*TILE_DIM/8, 2*TILE_DIM/8, 4*TILE_DIM/8);
+                              bg.fillRect(this.x + 4*TILE_DIM/8, this.y + 4*TILE_DIM/8, 4*TILE_DIM/8, TILE_DIM/8);
+                              bg.fillRect(this.x + 4*TILE_DIM/8, this.y + 4*TILE_DIM/8, TILE_DIM/8, 4*TILE_DIM/8);
+                              break;
+                    }
+                    break;
+               case "fi": // Field
+                    var count = 0;
+                    for (var i=0; i<5; i++){
+                         for (var j=0; j<5; j++){
+                              count++;
+                              var val = parseInt(Math.pow(10, count) * this.rng1) % 5;
+                              switch (val){
+                                   case 0:
+                                        bg.fillStyle = COL_BROWN_DARK;
+                                        break;
+                                   case 1:
+                                        bg.fillStyle = COL_GRASS_DARK;
+                                        break;
+                                   case 2:
+                                        bg.fillStyle = COL_ORANGE;
+                                        break;
+                                   case 3:
+                                        bg.fillStyle = COL_TREE;
+                                        break;
+                                   case 4:
+                                        bg.fillStyle = COL_YELLOW;
+                                        break;
+                              }
+                              bg.fillRect(this.x + i*TILE_DIM/5, this.y + j*TILE_DIM/5, TILE_DIM/5, TILE_DIM/5);
+                         }
+                    }
+                    break;
+               case "fw": // Fresh water
+                    bg.fillStyle = this.getRGB();
+                    bg.fillRect(this.x, this.y, TILE_DIM, TILE_DIM);
+                    break;
+               case "e1": // Estuary one
+                    bg.fillStyle = this.getRGB();
+                    bg.fillRect(this.x, this.y, TILE_DIM, TILE_DIM);
+                    break;
+               case "e2": // Estuary two
+                    bg.fillStyle = this.getRGB();
+                    bg.fillRect(this.x, this.y, TILE_DIM, TILE_DIM);
+                    break;
+               case "e3": // Estuary three
+                    bg.fillStyle = this.getRGB();
+                    bg.fillRect(this.x, this.y, TILE_DIM, TILE_DIM);
+                    break;
+               case "gr": // Grass
+                    if (this.rng1 < 0.5){
+                         bg.fillStyle = COL_GRASS;
+                         bg.fillRect(this.x, this.y, TILE_DIM, TILE_DIM);
+                    } else if (this.rng1 < 0.625){
+                         bg.drawImage(imgGrass, 0, 0, TILE_DIM, TILE_DIM, this.x, this.y, TILE_DIM, TILE_DIM);
+                    } else if (this.rng1 < 0.75){
+                         bg.drawImage(imgGrass, 30, 0, TILE_DIM, TILE_DIM, this.x, this.y, TILE_DIM, TILE_DIM);
+                    } else if (this.rng1 < 0.875){
+                         bg.drawImage(imgGrass, 60, 0, TILE_DIM, TILE_DIM, this.x, this.y, TILE_DIM, TILE_DIM);
+                    } else {
+                         bg.drawImage(imgGrass, 90, 0, TILE_DIM, TILE_DIM, this.x, this.y, TILE_DIM, TILE_DIM);
+                    }
+                    break;
+               case "hb": // Brian's house
+                    // Tile
+                    var grd = bg.createRadialGradient(this.x + TILE_DIM/2, this.y + TILE_DIM, 0, this.x + TILE_DIM/2, this.y + TILE_DIM, TILE_DIM);
+                    grd.addColorStop(0, COL_GRASS_DARK);
+                    grd.addColorStop(1, COL_GRASS);
+                    bg.fillStyle = grd
+                    bg.fillRect(this.x, this.y, TILE_DIM, TILE_DIM);
+                    // House
+                    bg.fillStyle = COL_WHITE;
+                    bg.fillRect(this.x + TILE_DIM/7, this.y + 2*TILE_DIM/7, 5*TILE_DIM/7, 4*TILE_DIM/7);
+                    // Window
+                    bg.fillStyle = COL_BLACK;
+                    bg.fillRect(this.x + 2*TILE_DIM/7, this.y + 3*TILE_DIM/7, TILE_DIM/7, TILE_DIM/7);
+                    // Door
+                    bg.fillStyle = COL_BLACK;
+                    bg.fillRect(this.x + 4*TILE_DIM/7, this.y + 3*TILE_DIM/7, TILE_DIM/7, 3*TILE_DIM/7);
+                    // Roof
+                    bg.fillStyle = COL_BLACK;
+                    bg.beginPath()
+                    bg.moveTo(this.x + TILE_DIM/2, this.y);
+                    bg.lineTo(this.x + TILE_DIM, this.y + 2*TILE_DIM/7);
+                    bg.lineTo(this.x, this.y + 2*TILE_DIM/7);
+                    bg.fill();
+                    break;
+               case "ho": // House
+                    // Tile
+                    var grd = bg.createRadialGradient(this.x + TILE_DIM/2, this.y + TILE_DIM, 0, this.x + TILE_DIM/2, this.y + TILE_DIM, TILE_DIM);
+                    grd.addColorStop(0, COL_GRASS_DARK);
+                    grd.addColorStop(1, COL_GRASS);
+                    bg.fillStyle = grd
+                    bg.fillRect(this.x, this.y, TILE_DIM, TILE_DIM);
+                    // House
+                    bg.fillStyle = this.getRGB();
+                    bg.fillRect(this.x + TILE_DIM/7, this.y + 2*TILE_DIM/7, 5*TILE_DIM/7, 4*TILE_DIM/7);
+                    if (this.rng1 < 0.5){
+                         // Window
+                         bg.fillStyle = COL_BLACK;
+                         bg.fillRect(this.x + 2*TILE_DIM/7, this.y + 3*TILE_DIM/7, TILE_DIM/7, TILE_DIM/7);
+                         // Door
+                         if (this.rng2 < 0.5){
+                              bg.fillStyle = COL_RED_ROOF;
+                         } else {
+                              bg.fillStyle = COL_BLACK;
+                         }
+                         bg.fillRect(this.x + 4*TILE_DIM/7, this.y + 3*TILE_DIM/7, TILE_DIM/7, 3*TILE_DIM/7);
+                    } else {
+                         // Window
+                         bg.fillStyle = COL_BLACK;
+                         bg.fillRect(this.x + 4*TILE_DIM/7, this.y + 3*TILE_DIM/7, TILE_DIM/7, TILE_DIM/7);
+                         // Door
+                         if (this.rng2 < 0.5){
+                              bg.fillStyle = COL_RED_ROOF;
+                         } else {
+                              bg.fillStyle = COL_BLACK;
+                         }
+                         bg.fillRect(this.x + 2*TILE_DIM/7, this.y + 3*TILE_DIM/7, TILE_DIM/7, 3*TILE_DIM/7);
+                    }
+                    // Roof
+                    if (this.rng2 < 0.5){
+                         bg.fillStyle = COL_BLACK;
+                    } else {
+                         bg.fillStyle = COL_RED_ROOF;
+                    }
+                    bg.beginPath()
+                    bg.moveTo(this.x + TILE_DIM/2, this.y);
+                    bg.lineTo(this.x + TILE_DIM, this.y + 2*TILE_DIM/7);
+                    bg.lineTo(this.x, this.y + 2*TILE_DIM/7);
+                    bg.fill();
+                    break;
+               case "lh": // Lighthouse
+                    // Tile
+                    var grd = bg.createRadialGradient(this.x + TILE_DIM/2, this.y + TILE_DIM, 0, this.x + TILE_DIM/2, this.y + TILE_DIM, TILE_DIM);
+                    grd.addColorStop(0, COL_GRASS_DARK);
+                    grd.addColorStop(1, COL_GRASS);
+                    bg.fillStyle = grd
+                    bg.fillRect(this.x, this.y, TILE_DIM, TILE_DIM);
+                    // Lighthouse
+                    bg.fillStyle = COL_WHITE;
+                    bg.beginPath()
+                    bg.moveTo(this.x + TILE_DIM/8, this.y + 7*TILE_DIM/8);
+                    bg.lineTo(this.x + TILE_DIM/4, this.y - TILE_DIM/8);
+                    bg.lineTo(this.x + 3*TILE_DIM/4, this.y - TILE_DIM/8);
+                    bg.lineTo(this.x + 7*TILE_DIM/8, this.y + 7*TILE_DIM/8);
+                    bg.fill();
+                    // Red top with light
+                    bg.fillStyle = COL_RED;
+                    bg.fillRect(this.x + TILE_DIM/4, this.y - 5*TILE_DIM/8, TILE_DIM/2, TILE_DIM/2);
+                    // White top
+                    bg.fillStyle = COL_WHITE;
+                    bg.fillRect(this.x + TILE_DIM/4, this.y - 6*TILE_DIM/8, TILE_DIM/2, TILE_DIM/8);
+                    // Red top
+                    bg.fillStyle = COL_RED;
+                    bg.fillRect(this.x + TILE_DIM/4, this.y - 7*TILE_DIM/8, TILE_DIM/2, TILE_DIM/8);
+                    // Door
+                    bg.fillStyle = COL_BLACK;
+                    bg.fillRect(this.x + 3*TILE_DIM/8, this.y + 3*TILE_DIM/8, TILE_DIM/4, TILE_DIM/2);
+                    // Light
+                    bg.fillStyle = COL_WHITE;
+                    bg.beginPath();
+                    bg.arc(this.x + TILE_DIM/2, this.y - 3*TILE_DIM/8, TILE_DIM/8, 0, 2*Math.PI);
+                    bg.fill();
+                    // Circular rim around light
+                    bg.fillStyle = COL_BLACK;
+                    bg.beginPath();
+                    bg.arc(this.x + TILE_DIM/2, this.y - 3*TILE_DIM/8, TILE_DIM/8, 0, 2*Math.PI);
+                    bg.stroke();
+                    break;
+               case "mo": // Monument
+                    // Tile
+                    var grd = bg.createRadialGradient(this.x + TILE_DIM/2, this.y + TILE_DIM, 0, this.x + TILE_DIM/2, this.y + TILE_DIM, TILE_DIM);
+                    grd.addColorStop(0, COL_GRASS_DARK);
+                    grd.addColorStop(1, COL_GRASS);
+                    bg.fillStyle = grd
+                    bg.fillRect(this.x, this.y, TILE_DIM, TILE_DIM);
+                    // Monument
+                    bg.drawImage(imgMonument, 0, 0, TILE_DIM, TILE_DIM, this.x, this.y, TILE_DIM, TILE_DIM);
+                    break;
+               case "oc": // Ocean
+                    bg.fillStyle = this.getRGB();
+                    bg.fillRect(this.x, this.y, TILE_DIM, TILE_DIM);
+                    break;
+               case "pa": // Path
+                    bg.fillStyle = COL_GRASS;
+                    bg.fillRect(this.x, this.y, TILE_DIM, TILE_DIM);
+                    bg.fillStyle = COL_PATH;
+                    switch (this.dir){
+                         case "1":
+                              bg.fillRect(this.x + TILE_DIM/4, this.y, TILE_DIM/2, TILE_DIM);
+                              break;
+                         case "2":
+                              bg.fillRect(this.x, this.y + TILE_DIM/4, TILE_DIM, TILE_DIM/2);
+                              break;
+                         case "3":
+                              bg.fillRect(this.x, this.y + TILE_DIM/4, 3*TILE_DIM/4, TILE_DIM/2);
+                              bg.fillRect(this.x + TILE_DIM/4, this.y + TILE_DIM/4, TILE_DIM/2, 3*TILE_DIM/4);
+                              break;
+                         case "4":
+                              bg.fillRect(this.x, this.y + TILE_DIM/4, 3*TILE_DIM/4, TILE_DIM/2);
+                              bg.fillRect(this.x + TILE_DIM/4, this.y, TILE_DIM/2, 3*TILE_DIM/4);
+                              break;
+                         case "5":
+                              bg.fillRect(this.x + TILE_DIM/4, this.y + TILE_DIM/4, 3*TILE_DIM/4, TILE_DIM/2);
+                              bg.fillRect(this.x + TILE_DIM/4, this.y, TILE_DIM/2, 3*TILE_DIM/4);
+                              break;
+                         case "6":
+                              bg.fillRect(this.x + TILE_DIM/4, this.y + TILE_DIM/4, 3*TILE_DIM/4, TILE_DIM/2);
+                              bg.fillRect(this.x + TILE_DIM/4, this.y + TILE_DIM/4, TILE_DIM/2, 3*TILE_DIM/4);
+                              break;
+                    }
+                    break;
+               case "px": // Path intersection
+                    bg.fillStyle = COL_GRASS;
+                    bg.fillRect(this.x, this.y, TILE_DIM, TILE_DIM);
+                    bg.fillStyle = COL_PATH;
+                    switch (this.dir){
+                         case "1":
+                              bg.fillRect(this.x, this.y + TILE_DIM/4, TILE_DIM, TILE_DIM/2);
+                              bg.fillRect(this.x + TILE_DIM/4, this.y, TILE_DIM/2, 3*TILE_DIM/4);
+                              break;
+                         case "2":
+                              bg.fillRect(this.x + TILE_DIM/4, this.y, TILE_DIM/2, TILE_DIM);
+                              bg.fillRect(this.x + TILE_DIM/4, this.y + TILE_DIM/4, 3*TILE_DIM/4, TILE_DIM/2);
+                              break;
+                         case "3":
+                              bg.fillRect(this.x, this.y + TILE_DIM/4, TILE_DIM, TILE_DIM/2);
+                              bg.fillRect(this.x + TILE_DIM/4, this.y + TILE_DIM/4, TILE_DIM/2, 3*TILE_DIM/4);
+                              break;
+                         case "4":
+                              bg.fillRect(this.x + TILE_DIM/4, this.y, TILE_DIM/2, TILE_DIM);
+                              bg.fillRect(this.x, this.y + TILE_DIM/4, 3*TILE_DIM/4, TILE_DIM/2);
+                              break;
+                         case "5":
+                              bg.fillRect(this.x + TILE_DIM/4, this.y, TILE_DIM/2, TILE_DIM);
+                              bg.fillRect(this.x, this.y + TILE_DIM/4, TILE_DIM, TILE_DIM/2);
+                              break;
+                    }
+                    break;
+               case "sa": // Sand
+                    bg.fillStyle = COL_SAND;
+                    bg.fillRect(this.x, this.y, TILE_DIM, TILE_DIM);
+                    break;
+               case "sf": // Ship over fresh water
+                    if (this.dir == "1"){
+                         bg.fillStyle = this.getRGB();
+                         bg.fillRect(this.x, this.y, 2*TILE_DIM, TILE_DIM);
+                         bg.drawImage(imgShip, 0, 0, 2*TILE_DIM, TILE_DIM, this.x, this.y, 2*TILE_DIM, TILE_DIM);
+                    }
+                    break;
+               case "sg": // Sandy grass
+                    switch (this.dir){
+                         case "7":
+                              var grd = bg.createLinearGradient(this.x, this.y, this.x + TILE_DIM, this.y);
+                              break;
+                         case "3":
+                              var grd = bg.createLinearGradient(this.x + TILE_DIM, this.y, this.x, this.y);
+                              break;
+                         case "1":
+                              var grd = bg.createLinearGradient(this.x, this.y, this.x, this.y + TILE_DIM);
+                              break;
+                         case "5":
+                              var grd = bg.createLinearGradient(this.x, this.y + TILE_DIM, this.x, this.y);
+                              break;
+                         case "8":
+                              var grd = bg.createLinearGradient(this.x, this.y, this.x + TILE_DIM/2, this.y + TILE_DIM/2);
+                              break;
+                         case "4":
+                              var grd = bg.createLinearGradient(this.x + TILE_DIM, this.y + TILE_DIM, this.x + TILE_DIM/2, this.y + TILE_DIM/2);
+                              break;
+                         case "2":
+                              var grd = bg.createLinearGradient(this.x + TILE_DIM, this.y, this.x + TILE_DIM/2, this.y + TILE_DIM/2);
+                              break;
+                         case "6":
+                              var grd = bg.createLinearGradient(this.x, this.y + TILE_DIM, this.x + TILE_DIM/2, this.y + TILE_DIM/2);
+                              break;
+                    }
+                    grd.addColorStop(0, COL_SAND);
+                    grd.addColorStop(1, COL_GRASS);
+                    bg.fillStyle = grd;
+                    bg.fillRect(this.x, this.y, TILE_DIM, TILE_DIM);
+                    break;
+               case "so": // Ship over fresh water
+                    if (this.dir == "1"){
+                         bg.fillStyle = this.getRGB();
+                         bg.fillRect(this.x, this.y, 2*TILE_DIM, TILE_DIM);
+                         bg.drawImage(imgShip, 0, 0, 2*TILE_DIM, TILE_DIM, this.x, this.y, 2*TILE_DIM, TILE_DIM);
+                    }
+                    break;
+               case "tr": // Tree
+                    // Tile
+                    var grd = bg.createRadialGradient(this.x + TILE_DIM/2, this.y + TILE_DIM, 0, this.x + TILE_DIM/2, this.y + TILE_DIM, TILE_DIM);
+                    grd.addColorStop(0, COL_GRASS_DARK);
+                    grd.addColorStop(1, COL_GRASS);
+                    bg.fillStyle = grd
+                    bg.fillRect(this.x, this.y, TILE_DIM, TILE_DIM);
+                    // Trunk
+                    bg.fillStyle = COL_BROWN_DARK;
+                    var n = 3 + parseInt(this.rng1 * 2);
+                    bg.fillRect(this.x + TILE_DIM/n, this.y + TILE_DIM/4, (1-2/n)*TILE_DIM, 3*TILE_DIM/4);
+                    // Leaves
+                    bg.fillStyle = this.getRGB();
+                    bg.beginPath();
+                    bg.arc(this.x + TILE_DIM/2, this.y + TILE_DIM/2, TILE_DIM/3 + this.rng2 * (TILE_DIM/2.5 - TILE_DIM/3), 0, 2*Math.PI);
+                    bg.fill();
+                    // More leaves
+                    bg.fillStyle = this.getRGB();
+                    bg.beginPath();
+                    bg.arc(this.x + TILE_DIM/4 + this.rng1*TILE_DIM/2, this.y + TILE_DIM/4 + this.rng2*TILE_DIM/4, TILE_DIM/4, 0, 2*Math.PI);
+                    bg.fill();
+                    break;
+               case "xx": // X marks the spot
+                    bg.fillStyle = COL_GRASS;
+                    bg.fillRect(this.x, this.y, TILE_DIM, TILE_DIM);
+                    bg.drawImage(imgX, 0, 0, TILE_DIM, TILE_DIM, this.x, this.y, TILE_DIM, TILE_DIM);
+                    break;
+          }
+     }
+
+     this.getRandomColorValue = function(v0, v1){
+          return v0 + parseInt(Math.random() * (v1 - v0));
+     }
+
+     this.getRGB = function(){
+          return "rgb(" + this.r + "," + this.g + "," + this.b + ")";
+     }
+
+     this.clear = function(){
+          bg.clearRect(this.x, this.y, TILE_DIM, TILE_DIM);
+     }
+
+     this.update = function(){
+          if (this.redraw){
+               // Check red value
+               if (this.r == this.rt){
+                    this.rt = this.getRandomColorValue(this.r0, this.r1);
+               } else if (this.r < this.rt){
+                    this.r++;
+               } else if (this.r > this.rt){
+                    this.r--;
+               }
+               // Check green value
+               if (this.g == this.gt){
+                    this.gt = this.getRandomColorValue(this.g0, this.g1);
+               } else if (this.g < this.gt){
+                    this.g++;
+               } else if (this.g > this.gt){
+                    this.g--;
+               }
+               // Check blue value
+               if (this.b == this.bt){
+                    this.bt = this.getRandomColorValue(this.b0, this.b1);
+               } else if (this.b < this.bt){
+                    this.b++;
+               } else if (this.b > this.bt){
+                    this.b--;
+               }
+          }
+     }
+
+     this.init();
+}
+
+function initTiles(){
+     tiles = [];
+     for (var i=0; i<NUM_TILES; i++){
+          tiles.push([]);
+          for (var j=0; j<NUM_TILES; j++){
+               var tile = new Tile(world.map[i][j], world.int[i][j], j * TILE_DIM, i * TILE_DIM);
+               tiles[i].push(tile);
+          }
+     }
+}
+
+function drawTiles(){
+     for (var i=0; i<NUM_TILES; i++){
+          for (var j=0; j<NUM_TILES; j++){
+               tiles[i][j].draw();
+          }
+     }
+}
+
+function updateTiles(){
+     for (var i=0; i<NUM_TILES; i++){
+          for (var j=0; j<NUM_TILES; j++){
+               tiles[i][j].update();
+          }
+     }
+}
+
+function clearTiles(){
+     for (var i=0; i<NUM_TILES; i++){
+          for (var j=0; j<NUM_TILES; j++){
+               tiles[i][j].clear();
+          }
+     }
+}
+
+function getWalkable(x, y){
+     var i = parseInt(y / TILE_DIM);
+     var j = parseInt(x / TILE_DIM);
+     return tiles[i][j].isWalkable;
+}
+
+function isWalkable(x, y){
+     var val;
+     if (x <= 0 || x >= STAGE_DIM || y <= 0 || y >= STAGE_DIM){
+          val = true;
+     } else {
+          val = getWalkable(x, y);
+     }
+     return val;
+}
+
+function getCodeInt(x, y){
+     var i = parseInt(y / TILE_DIM);
+     var j = parseInt(x / TILE_DIM);
+     return tiles[i][j].int;
+}
+
+function isInteractive(x, y){
+     var val;
+     if (x <= 0 || x >= STAGE_DIM || y <= 0 || y >= STAGE_DIM){
+          val = false;
+     } else {
+          val = getCodeInt(x, y) != 0;
+     }
+     return val;
+}
+
+/*
+Player
+*/
+
+function Player(x, y){
+     this.init = function(){
+          this.x = x;
+          this.y = y;
+          this.width = PLAYER_DIM;
+          this.height = PLAYER_DIM;
+          this.xSpeed = 2;
+          this.ySpeed = 2;
+          this.isMovingLeft = false;
+          this.isMovingRight = false;
+          this.isMovingUp = false;
+          this.isMovingDown = false;
+          this.canInteract = false;
+          this.onTreasure = false;
+     }
+
+     this.clear = function(){
+          fg.clearRect(0, 0, STAGE_DIM, STAGE_DIM);
+     }
+
+     this.draw = function(){
+          if (this.canInteract && ! this.onTreasure){
+               var i = parseInt((this.y + this.height/2) / TILE_DIM);
+               var j = parseInt((this.x + this.width/2) / TILE_DIM);
+               fg.globalAlpha = 0.5;
+               fg.fillStyle = COL_RED;
+               fg.fillRect(j*TILE_DIM, i*TILE_DIM, TILE_DIM, TILE_DIM);
+               fg.globalAlpha = 1;
+          }
+          fg.fillStyle = COL_BLACK;
+          fg.fillRect(this.x, this.y, this.width, this.height);
+     }
+
+     this.update = function(){
+          // Update position
+          if (this.isMovingLeft){
+               for (var i=this.xSpeed; i>0; i--){
+                    if (isWalkable(this.x - i, this.y) && isWalkable(this.x - i, this.y + this.height)){
+                         this.x -= i;
+                         break;
+                    }
+               }
+          }
+          if (this.isMovingRight){
+               for (var i=this.xSpeed; i>0; i--){
+                    if (isWalkable(this.x + this.width + i, this.y) && isWalkable(this.x + this.width + i, this.y + this.height)){
+                         this.x += i;
+                         break;
+                    }
+               }
+          }
+          if (this.isMovingUp){
+               for (var i=this.ySpeed; i>0; i--){
+                    if (isWalkable(this.x, this.y - i) && isWalkable(this.x + this.width, this.y - i)){
+                         this.y -= i;
+                         break;
+                    }
+               }
+          }
+          if (this.isMovingDown){
+               for (var i=this.ySpeed; i>0; i--){
+                    if (isWalkable(this.x, this.y + this.height + i) && isWalkable(this.x + this.width, this.y + this.height + i)){
+                         this.y += i;
+                         break;
+                    }
+               }
+          }
+          // Update interactive status
+          if (isInteractive(this.x + this.width/2, this.y + this.height/2)){
+               this.canInteract = true;
+               if (getCodeInt(this.x + this.width/2, this.y + this.height/2) == 63){
+                    this.onTreasure = true;
+               } else {
+                    this.onTreasure = false;
+               }
+          } else {
+               this.canInteract = false;
+          }
+     }
+
+     this.init();
+}
+
+/*
+Weather
+*/
+
+function Weather(){
+     this.init = function(){
+          this.rng = Math.random();
+          this.scale = 0.5 + Math.random();
+          this.width = this.scale * imgCloudWidth;
+          this.height = this.scale * imgCloudHeight;
+          this.x = (Math.random() * (STAGE_DIM + this.width)) - this.width;
+          this.y = (Math.random() * STAGE_DIM) - this.height/2;
+          this.xSpeed = 0.25 + 0.75*Math.random();
+          this.alpha = 0.55 + 0.5*Math.random();
+     }
+
+     this.reset = function(){
+          this.rng = Math.random();
+          this.scale = 0.5 + Math.random();
+          this.width = this.scale * imgCloudWidth;
+          this.height = this.scale * imgCloudHeight;
+          this.x = -this.width;
+          this.y = (Math.random() * STAGE_DIM) - this.height/2;
+          this.xSpeed = 0.25 + 0.75*Math.random();
+          this.alpha = 0.5 + 0.5*Math.random();
+     }
+
+     this.draw = function(){
+          wg.globalAlpha = this.alpha;
+          if (this.rng < 0.33){
+               wg.drawImage(imgCloud, 0, 0, imgCloudWidth, imgCloudHeight, this.x, this.y, this.width, this.height);
+          } else if (this.rng < 0.66){
+               wg.drawImage(imgCloud, 200, 0, imgCloudWidth, imgCloudHeight, this.x, this.y, this.width, this.height);
+          } else {
+               wg.drawImage(imgCloud, 400, 0, imgCloudWidth, imgCloudHeight, this.x, this.y, this.width, this.height);
+          }
+     }
+
+     this.update = function(){
+          this.x += this.xSpeed;
+          if (this.x >= STAGE_DIM){
+               this.reset();
+          }
+     }
+
+     this.init();
+}
+
+function initWeathers(){
+     weathers = [];
+     for (var i=0; i<NUM_WEATHERS; i++){
+          var weather = new Weather();
+          weathers.push(weather);
+     }
+}
+
+function drawWeathers(){
+     for (var i=0; i<NUM_WEATHERS; i++){
+          weathers[i].draw();
+     }
+}
+
+function updateWeathers(){
+     for (var i=0; i<NUM_WEATHERS; i++){
+          weathers[i].update();
+     }
+}
+
+function clearWeathers(){
+     wg.clearRect(0, 0, STAGE_DIM, STAGE_DIM);
+}
+
+/*
+Message
+*/
+
+function Message(){
+     this.init = function(){
+
+     }
+
+     this.draw = function(){
+          var i = parseInt((player.y + player.height/2) / TILE_DIM);
+          var j = parseInt((player.x + player.width/2) / TILE_DIM);
+          var val = tiles[i][j].int;
+          mg.globalAlpha = 0.5;
+          mg.fillStyle = COL_WHITE;
+          mg.fillRect((STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+          mg.globalAlpha = 1;
+          switch (val){
+               case 11:
+                    mg.drawImage(imgMessages, 0,    0, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 12:
+                    mg.drawImage(imgMessages, 0,  200, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 13:
+                    mg.drawImage(imgMessages, 0,  400, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 14:
+                    mg.drawImage(imgMessages, 0,  600, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 21:
+                    mg.drawImage(imgMessages, 0,  800, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 22:
+                    mg.drawImage(imgMessages, 0, 1000, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 23:
+                    mg.drawImage(imgMessages, 0, 1200, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 24:
+                    mg.drawImage(imgMessages, 0, 1400, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 25:
+                    mg.drawImage(imgMessages, 0, 1600, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 26:
+                    mg.drawImage(imgMessages, 0, 1800, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 27:
+                    mg.drawImage(imgMessages, 0, 2000, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 31:
+                    mg.drawImage(imgMessages, 0, 2200, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 32:
+                    mg.drawImage(imgMessages, 0, 2400, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 33:
+                    mg.drawImage(imgMessages, 0, 2600, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 34:
+                    mg.drawImage(imgMessages, 0, 2800, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 35:
+                    mg.drawImage(imgMessages, 0, 3000, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 41:
+                    mg.drawImage(imgMessages, 0, 3200, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 42:
+                    mg.drawImage(imgMessages, 0, 3400, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 43:
+                    mg.drawImage(imgMessages, 0, 3600, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 44:
+                    mg.drawImage(imgMessages, 0, 3800, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 45:
+                    mg.drawImage(imgMessages, 0, 4000, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 46:
+                    mg.drawImage(imgMessages, 0, 4200, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 47:
+                    mg.drawImage(imgMessages, 0, 4400, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 48:
+                    mg.drawImage(imgMessages, 0, 4600, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 49:
+                    mg.drawImage(imgMessages, 0, 4800, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 51:
+                    mg.drawImage(imgMessages, 0, 5000, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 52:
+                    mg.drawImage(imgMessages, 0, 5200, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 53:
+                    mg.drawImage(imgMessages, 0, 5400, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 54:
+                    mg.drawImage(imgMessages, 0, 5600, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 55:
+                    mg.drawImage(imgMessages, 0, 5800, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 61:
+                    mg.drawImage(imgMessages, 0, 6000, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 62:
+                    mg.drawImage(imgMessages, 0, 6200, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 63:
+                    mg.drawImage(imgMessages, 0, 6400, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 64:
+                    mg.drawImage(imgMessages, 0, 6600, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 65:
+                    mg.drawImage(imgMessages, 0, 6800, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+               case 66:
+                    mg.drawImage(imgMessages, 0, 7000, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                    break;
+          }
+     }
+
+     this.clear = function(){
+          mg.clearRect(0, 0, STAGE_DIM, STAGE_DIM);
+     }
+
+     this.init();
+}
+
+</script>
+
+</body>
+</html>
