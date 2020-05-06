@@ -404,20 +404,20 @@ function intro(){
      mg = canvasMG.getContext('2d');
      // Images
      imgCloud = new Image();
-     imgCloud.src = "cloud.png";
+     imgCloud.src = "/images/cloud.png";
      imgGrass = new Image();
-     imgGrass.src = "grass.png";
+     imgGrass.src = "/images/grass.png";
      imgIntro = new Image();
-     imgIntro.src = "intro.png";
+     imgIntro.src = "/images/intro.png";
      imgIntro.onload = function(){bg.drawImage(imgIntro, 0, 0, STAGE_DIM, STAGE_DIM, 0, 0, STAGE_DIM, STAGE_DIM);}
      imgMessages = new Image();
-     imgMessages.src = "messages.png";
+     imgMessages.src = "/images/messages.png";
      imgMonument = new Image();
-     imgMonument.src = "monument.png";
+     imgMonument.src = "/images/monument.png";
      imgShip = new Image();
-     imgShip.src = "ship.png";
+     imgShip.src = "/images/ship.png";
      imgX = new Image();
-     imgX.src = "x.png";
+     imgX.src = "/images/x.png";
      // Event listeners
      window.addEventListener("keydown", onKeyDown);
      window.addEventListener("keyup", onKeyUp);
