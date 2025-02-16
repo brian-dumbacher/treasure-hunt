@@ -75,12 +75,12 @@ const TILE_DIM         = STAGE_DIM / NUM_TILES;
 const PLAYER_DIM       = TILE_DIM/2;
 const WORLD_WIDTH      = 2;
 const WORLD_HEIGHT     = 3;
-const NUM_CLOUDS       = 3;
 const FPS              = 60;
-const imgCloudWidth    = 200;
-const imgCloudHeight   = 100;
-const imgMessageWidth  = 600;
-const imgMessageHeight = 200;
+const NUM_CLOUDS       = 3;
+const CLOUD_WIDTH    = 200;
+const CLOUD_HEIGHT   = 100;
+const MESSAGE_WIDTH  = 600;
+const MESSAGE_HEIGHT = 200;
 
 // Colors
 const COL_BLACK       = "rgb(0,0,0)";
@@ -99,7 +99,7 @@ const COL_WHITE       = "rgb(255,255,255)";
 const COL_YELLOW      = "rgb(255,255,0)";
 
 // Images
-var imgCloud;
+var imgClouds;
 var imgCloudShadow;
 var imgGrass;
 var imgIntro;
@@ -465,8 +465,8 @@ function intro(){
     mg = canvasMG.getContext('2d');
 
     // Images
-    imgCloud           = new Image();
-    imgCloud.src       = "media/cloud.png";
+    imgClouds          = new Image();
+    imgClouds.src      = "media/clouds.png";
     imgCloudShadow     = new Image();
     imgCloudShadow.src = "media/cloud_shadow.png";
     imgGrass           = new Image();
@@ -1671,8 +1671,8 @@ function Cloud(){
     this.init = function(){
         this.rng = Math.random();
         this.scale = 0.5 + Math.random();
-        this.width = this.scale * imgCloudWidth;
-        this.height = this.scale * imgCloudHeight;
+        this.width = this.scale * CLOUD_WIDTH;
+        this.height = this.scale * CLOUD_HEIGHT;
         this.x = (Math.random() * (STAGE_DIM + this.width)) - this.width;
         this.y = (Math.random() * STAGE_DIM) - this.height/2;
         this.xSpeed = 0.25 + (0.75 * Math.random());
@@ -1682,8 +1682,8 @@ function Cloud(){
     this.reset = function(){
         this.rng = Math.random();
         this.scale = 0.5 + Math.random();
-        this.width = this.scale * imgCloudWidth;
-        this.height = this.scale * imgCloudHeight;
+        this.width = this.scale * CLOUD_WIDTH;
+        this.height = this.scale * CLOUD_HEIGHT;
         this.x = -this.width;
         this.y = (Math.random() * STAGE_DIM) - this.height/2;
         this.xSpeed = 0.25 + (0.75 * Math.random());
@@ -1691,16 +1691,21 @@ function Cloud(){
     }
 
     this.draw = function(){
+        // Draw cloud
+        var imgCloudsXPos;
         cg.globalAlpha = this.alpha;
         if (this.rng < 0.33){
-            cg.drawImage(imgCloud, 0, 0, imgCloudWidth, imgCloudHeight, this.x, this.y, this.width, this.height);
+            imgCloudsXPos = 0;
         } else if (this.rng < 0.66){
-            cg.drawImage(imgCloud, 200, 0, imgCloudWidth, imgCloudHeight, this.x, this.y, this.width, this.height);
+            imgCloudsXPos = 200;
         } else {
-            cg.drawImage(imgCloud, 400, 0, imgCloudWidth, imgCloudHeight, this.x, this.y, this.width, this.height);
+            imgCloudsXPos = 400;
         }
+        cg.drawImage(imgClouds, imgCloudsXPos, 0, CLOUD_WIDTH, CLOUD_HEIGHT, this.x, this.y, this.width, this.height);
+
+        // Draw cloud shadow
         sg.globalAlpha = this.alpha;
-        sg.drawImage(imgCloudShadow, 0, 0, imgCloudWidth, imgCloudHeight, this.x, this.y + 100, this.width, this.height);
+        sg.drawImage(imgCloudShadow, 0, 0, CLOUD_WIDTH, CLOUD_HEIGHT, this.x, this.y + 200, this.width, this.height);
     }
 
     this.update = function(){
@@ -1757,133 +1762,135 @@ function Message(){
         // Draw white background
         mg.globalAlpha = 1;
         mg.fillStyle = COL_WHITE;
-        mg.fillRect((STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+        mg.fillRect((STAGE_DIM - MESSAGE_WIDTH)/2, (STAGE_DIM - MESSAGE_HEIGHT)/2, MESSAGE_WIDTH, MESSAGE_HEIGHT);
 
         // Draw message
         var i = parseInt((player.y + player.height/2) / TILE_DIM);
         var j = parseInt((player.x + player.width/2) / TILE_DIM);
+        var imgMessagesYPos;
         switch (tiles[i][j].codeInteraction){
             case 11:
-                mg.drawImage(imgMessages, 0,    0, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 0;
                 break;
             case 12:
-                mg.drawImage(imgMessages, 0,  200, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 200;
                 break;
             case 13:
-                mg.drawImage(imgMessages, 0,  400, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 400;
                 break;
             case 14:
-                mg.drawImage(imgMessages, 0,  600, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 600;
                 break;
             case 21:
-                mg.drawImage(imgMessages, 0,  800, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 800;
                 break;
             case 22:
-                mg.drawImage(imgMessages, 0, 1000, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 1000;
                 break;
             case 23:
-                mg.drawImage(imgMessages, 0, 1200, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 1200;
                 break;
             case 24:
-                mg.drawImage(imgMessages, 0, 1400, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 1400;
                 break;
             case 25:
-                mg.drawImage(imgMessages, 0, 1600, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 1600;
                 break;
             case 26:
-                mg.drawImage(imgMessages, 0, 1800, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 1800;
                 break;
             case 27:
-                mg.drawImage(imgMessages, 0, 2000, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 2000;
                 break;
             case 28:
-                mg.drawImage(imgMessages, 0, 2200, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 2200;
                 break;
             case 31:
-                mg.drawImage(imgMessages, 0, 2400, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 2400;
                 break;
             case 32:
-                mg.drawImage(imgMessages, 0, 2600, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 2600;
                 break;
             case 33:
-                mg.drawImage(imgMessages, 0, 2800, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 2800;
                 break;
             case 34:
-                mg.drawImage(imgMessages, 0, 3000, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 3000;
                 break;
             case 35:
-                mg.drawImage(imgMessages, 0, 3200, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 3200;
                 break;
             case 36:
-                mg.drawImage(imgMessages, 0, 3400, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 3400;
                 break;
             case 37:
-                mg.drawImage(imgMessages, 0, 3600, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 3600;
                 break;
             case 38:
-                mg.drawImage(imgMessages, 0, 3800, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 3800;
                 break;
             case 41:
-                mg.drawImage(imgMessages, 0, 4000, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 4000;
                 break;
             case 42:
-                mg.drawImage(imgMessages, 0, 4200, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 4200;
                 break;
             case 43:
-                mg.drawImage(imgMessages, 0, 4400, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 4400;
                 break;
             case 44:
-                mg.drawImage(imgMessages, 0, 4600, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 4600;
                 break;
             case 45:
-                mg.drawImage(imgMessages, 0, 4800, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 4800;
                 break;
             case 46:
-                mg.drawImage(imgMessages, 0, 5000, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 5000;
                 break;
             case 47:
-                mg.drawImage(imgMessages, 0, 5200, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 5200;
                 break;
             case 48:
-                mg.drawImage(imgMessages, 0, 5400, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 5400;
                 break;
             case 49:
-                mg.drawImage(imgMessages, 0, 5600, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 5600;
                 break;
             case 51:
-                mg.drawImage(imgMessages, 0, 5800, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 5800;
                 break;
             case 52:
-                mg.drawImage(imgMessages, 0, 6000, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 6000;
                 break;
             case 53:
-                mg.drawImage(imgMessages, 0, 6200, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 6200;
                 break;
             case 54:
-                mg.drawImage(imgMessages, 0, 6400, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 6400;
                 break;
             case 55:
-                mg.drawImage(imgMessages, 0, 6600, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 6600;
                 break;
             case 61:
-                mg.drawImage(imgMessages, 0, 6800, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 6800;
                 break;
             case 62:
-                mg.drawImage(imgMessages, 0, 7000, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 7000;
                 break;
             case 63:
-                mg.drawImage(imgMessages, 0, 7200, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 7200;
                 break;
             case 64:
-                mg.drawImage(imgMessages, 0, 7400, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 7400;
                 break;
             case 65:
-                mg.drawImage(imgMessages, 0, 7600, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 7600;
                 break;
             case 66:
-                mg.drawImage(imgMessages, 0, 7800, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+                imgMessagesYPos = 7800;
                 break;
         }
+        mg.drawImage(imgMessages, 0, imgMessagesYPos, MESSAGE_WIDTH, MESSAGE_HEIGHT, (STAGE_DIM - MESSAGE_WIDTH)/2, (STAGE_DIM - MESSAGE_HEIGHT)/2, MESSAGE_WIDTH, MESSAGE_HEIGHT);
     }
 
     this.clear = function(){
