@@ -39,7 +39,7 @@ Message canvas
 ###   Audio   ###
 #################
 
-MP3 "Ahead on Our Own" obtained for free from https://downloads.khinsider.com/game-soundtracks/album/final-fantasy-vii-arranged-soundtrack-2016
+MP3 "Ahead on Our Way" obtained for free from https://downloads.khinsider.com/game-soundtracks/album/final-fantasy-vii-arranged-soundtrack-2016
 -->
 
 <div id="divAudio" style="align-items: center; display: flex; justify-content: center; position: relative; margin: 0 auto; width: 600px;">
@@ -123,15 +123,14 @@ var message;
 var world;
 
 /*
-##########################
-###   Appearnce maps   ###
-##########################
+###########################
+###   Appearance maps   ###
+###########################
 
 be: Beach 
 bf: Bridge over fresh water
 bg: Building
 bo: Bridge over ocean
-cl: Cliff over ocean
 e1: Estuary one
 e2: Estuary two
 e3: Estuary three
@@ -159,7 +158,7 @@ var appearanceMap_0_0 = [["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "tr_0", "tr_0"
                          ["oc_0", "e3_0", "oc_0", "oc_0", "oc_0", "tr_0", "tr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0"],
                          ["oc_0", "oc_0", "oc_0", "e3_0", "oc_0", "oc_0", "e3_0", "gr_0", "gr_0", "gr_0", "ho_0", "gr_0", "gr_0", "gr_0", "tr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0"],
                          ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "e3_0", "e3_0", "e3_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0", "gr_0"],
-                         ["oc_0", "oc_0", "oc_0", "e3_0", "oc_0", "oc_0", "e3_0", "e2_0", "gr_0", "gr_0", "e1_0", "e1_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0"],
+                         ["oc_0", "oc_0", "oc_0", "e3_0", "oc_0", "oc_0", "e3_0", "e2_0", "tr_0", "tr_0", "e1_0", "e1_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0"],
                          ["oc_0", "e3_0", "oc_0", "oc_0", "oc_0", "e3_0", "e3_0", "e3_0", "e2_0", "e1_0", "e1_0", "fw_0", "fw_0", "e1_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0"],
                          ["oc_0", "oc_0", "oc_0", "e3_0", "oc_0", "oc_0", "e3_0", "e2_0", "e2_0", "e2_0", "e1_0", "e1_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0"],
                          ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "e3_0", "e3_0", "e3_0", "e2_0", "e1_0", "e1_0", "fw_0", "fw_0", "e1_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0", "fw_0"],
@@ -699,7 +698,7 @@ function Tile(codeAppearance, codeInteraction, x, y){
         this.b0 = 255;
         this.b1 = 255;
 
-        // Walk-over transparency
+        // Walk-over effect parameters
         this.walkOverStart = false;
         this.walkOverEffect = false;
         this.walkOverAlpha = 0;
@@ -738,16 +737,6 @@ function Tile(codeAppearance, codeInteraction, x, y){
                 break;
            case "bo": // Bridge over ocean
                 this.isWalkable = true;
-                this.redraw = true;
-                this.r0 = 100;
-                this.r1 = 250;
-                this.g0 = 220;
-                this.g1 = 220;
-                this.b0 = 220;
-                this.b1 = 250;
-                break;
-            case "cl": // Cliff over ocean
-                this.isWalkable = false;
                 this.redraw = true;
                 this.r0 = 100;
                 this.r1 = 250;
@@ -900,6 +889,7 @@ function Tile(codeAppearance, codeInteraction, x, y){
     }
 
     this.draw = function(){
+        // Draw tile according to type
         switch (this.type){
             case "be": // Beach
                 switch (this.dir){
@@ -1051,14 +1041,6 @@ function Tile(codeAppearance, codeInteraction, x, y){
                         bg.fillRect(this.x + 5*TILE_DIM/6, this.y + TILE_DIM/6, TILE_DIM/6, 4*TILE_DIM/6);
                         break;
                 }
-                break;
-            case "cl": // Cliff over ocean
-                var grd = bg.createLinearGradient(this.x, this.y, this.x, this.y + TILE_DIM);
-                grd.addColorStop(0, COL_BROWN_FENCE);
-                grd.addColorStop(0.33, COL_BROWN_FENCE);
-                grd.addColorStop(0.66, this.getRGB());
-                bg.fillStyle = grd;
-                bg.fillRect(this.x, this.y, TILE_DIM, TILE_DIM);
                 break;
             case "fe": // Fence
                 if (this.rng1 < 0.5){
@@ -1456,6 +1438,7 @@ function Tile(codeAppearance, codeInteraction, x, y){
                 bg.drawImage(imgX, 0, 0, TILE_DIM, TILE_DIM, this.x, this.y, TILE_DIM, TILE_DIM);
                 break;
         }
+        // Draw walk-over effect
         if (this.walkOverEffect){
             bg.globalAlpha = this.walkOverAlpha/100;
             bg.fillStyle = COL_RED;
@@ -1564,18 +1547,14 @@ function clearTiles(){
     }
 }
 
-function getWalkable(x, y){
-    var i = parseInt(y / TILE_DIM);
-    var j = parseInt(x / TILE_DIM);
-    return tiles[i][j].isWalkable;
-}
-
 function isWalkable(x, y){
     var val;
     if (x <= 0 || x >= STAGE_DIM || y <= 0 || y >= STAGE_DIM){
         val = true;
     } else {
-        val = getWalkable(x, y);
+        var i = parseInt(y / TILE_DIM);
+        var j = parseInt(x / TILE_DIM);
+        val = tiles[i][j].isWalkable;
     }
     return val;
 }
@@ -1696,8 +1675,8 @@ function Cloud(){
         this.height = this.scale * imgCloudHeight;
         this.x = (Math.random() * (STAGE_DIM + this.width)) - this.width;
         this.y = (Math.random() * STAGE_DIM) - this.height/2;
-        this.xSpeed = 0.25 + 0.75*Math.random();
-        this.alpha = 0.5 + 0.5*Math.random();
+        this.xSpeed = 0.25 + (0.75 * Math.random());
+        this.alpha = 0.75 + (0.25 * Math.random());
     }
 
     this.reset = function(){
@@ -1707,8 +1686,8 @@ function Cloud(){
         this.height = this.scale * imgCloudHeight;
         this.x = -this.width;
         this.y = (Math.random() * STAGE_DIM) - this.height/2;
-        this.xSpeed = 0.25 + 0.75*Math.random();
-        this.alpha = 0.75 + 0.25*Math.random();
+        this.xSpeed = 0.25 + (0.75 * Math.random());
+        this.alpha = 0.75 + (0.25 * Math.random());
     }
 
     this.draw = function(){
@@ -1767,18 +1746,22 @@ function clearClouds(){
 
 function Message(){
     this.init = function(){
-
     }
 
     this.draw = function(){
-        var i = parseInt((player.y + player.height/2) / TILE_DIM);
-        var j = parseInt((player.x + player.width/2) / TILE_DIM);
+        // Draw half-transparent black background
         mg.globalAlpha = 0.5;
         mg.fillStyle = COL_BLACK;
         mg.fillRect(0, 0, STAGE_DIM, STAGE_DIM);
+
+        // Draw white background
         mg.globalAlpha = 1;
         mg.fillStyle = COL_WHITE;
         mg.fillRect((STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
+
+        // Draw message
+        var i = parseInt((player.y + player.height/2) / TILE_DIM);
+        var j = parseInt((player.x + player.width/2) / TILE_DIM);
         switch (tiles[i][j].codeInteraction){
             case 11:
                 mg.drawImage(imgMessages, 0,    0, imgMessageWidth, imgMessageHeight, (STAGE_DIM - imgMessageWidth)/2, (STAGE_DIM - imgMessageHeight)/2, imgMessageWidth, imgMessageHeight);
