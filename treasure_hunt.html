@@ -54,7 +54,7 @@ MP3 "Ahead on Our Way" obtained for free from https://downloads.khinsider.com/ga
 -->
 
 <div id="divInstruct" style="margin: 0 auto; text-align: left; width: 600px;">
-<p id="textInstruct" style="font-family:arial;">You and your fellow townspeople are on the hunt for buried treasure.  Explore your world, talk to others, and pick up clues.  Use the arrow keys to move.  Use the space bar to interact with the environment and to dig for treasure.  Red visual cues indicate when you can interact, but you can dig anytime.  Press the space bar to begin your Treasure Hunt!</p>
+<p id="textInstruct" style="font-family: arial;">You and your fellow townspeople are on the hunt for buried treasure.  Explore your world, talk to others, and pick up clues.  Use the arrow keys to move.  Use the space bar to interact with the environment and to dig for treasure.  Red visual cues indicate when you can interact, but you can dig anytime.  Press the space bar to begin your Treasure Hunt!</p>
 </div>
 
 <script type="text/javascript">
@@ -69,34 +69,34 @@ MP3 "Ahead on Our Way" obtained for free from https://downloads.khinsider.com/ga
 window.onload = intro;
 
 // Dimensions
-const STAGE_DIM        = 600;
-const NUM_TILES        = 20;
-const TILE_DIM         = STAGE_DIM / NUM_TILES;
-const PLAYER_DIM       = TILE_DIM/2;
-const WORLD_WIDTH      = 2;
-const WORLD_HEIGHT     = 3;
-const FPS              = 60;
-const NUM_CLOUDS       = 3;
+const STAGE_DIM      = 600;
+const NUM_TILES      = 20;
+const TILE_DIM       = STAGE_DIM / NUM_TILES;
+const PLAYER_DIM     = TILE_DIM/2;
+const WORLD_WIDTH    = 2;
+const WORLD_HEIGHT   = 3;
+const FPS            = 60;
+const NUM_CLOUDS     = 3;
 const CLOUD_WIDTH    = 200;
 const CLOUD_HEIGHT   = 100;
 const MESSAGE_WIDTH  = 600;
 const MESSAGE_HEIGHT = 200;
 
 // Colors
-const COL_BLACK       = "rgb(0,0,0)";
-const COL_BROWN_DARK  = "rgb(90,70,10)";
-const COL_BROWN_FENCE = "rgb(100,100,30)";
-const COL_RED_ROOF    = "rgb(230,100,70)";
-const COL_GRASS       = "rgb(60,220,40)";
-const COL_GRASS_DARK  = "rgb(50,160,40)";
-const COL_GREEN       = "rgb(0,255,0)";
-const COL_ORANGE      = "rgb(255,160,0)";
-const COL_PATH        = "rgb(230,230,200)";
-const COL_RED         = "rgb(255,0,0)";
-const COL_SAND        = "rgb(255,220,90)";
-const COL_TREE        = "rgb(0,90,0)";
-const COL_WHITE       = "rgb(255,255,255)";
-const COL_YELLOW      = "rgb(255,255,0)";
+const COL_BLACK       = "rgb(  0,   0,   0)";
+const COL_BROWN_DARK  = "rgb( 90,  70,  10)";
+const COL_BROWN_FENCE = "rgb(100, 100,  30)";
+const COL_RED_ROOF    = "rgb(230, 100,  70)";
+const COL_GRASS       = "rgb( 60, 220,  40)";
+const COL_GRASS_DARK  = "rgb( 50, 160,  40)";
+const COL_GREEN       = "rgb(  0, 255,   0)";
+const COL_ORANGE      = "rgb(255, 160,   0)";
+const COL_PATH        = "rgb(230, 230, 200)";
+const COL_RED         = "rgb(255,   0,   0)";
+const COL_SAND        = "rgb(255, 220,  90)";
+const COL_TREE        = "rgb(  0,  90,   0)";
+const COL_WHITE       = "rgb(255, 255, 255)";
+const COL_YELLOW      = "rgb(255, 255,   0)";
 
 // Images
 var imgClouds;
@@ -497,6 +497,7 @@ function intro(){
 ###########################
 */
 
+// On key down event listener
 function onKeyDown(e){
     if (gameState == "walk"){
         switch (e.keyCode){
@@ -516,6 +517,7 @@ function onKeyDown(e){
     }
 }
 
+// On key up event listener
 function onKeyUp(e){
     if (gameState == "intro"){
         switch (e.keyCode){
@@ -529,7 +531,7 @@ function onKeyUp(e){
                 // Initialize tiles, player, clouds, and message
                 initTiles();
                 drawTiles();
-                player = new Player(STAGE_DIM/2 + (TILE_DIM - PLAYER_DIM)/2, STAGE_DIM/2 + (TILE_DIM - PLAYER_DIM)/2);
+                player = new Player(10, 10);
                 player.draw();
                 initClouds();
                 drawClouds();
@@ -619,6 +621,7 @@ function loop(){
 */
 
 function World(iStart, jStart){
+    // Initialize world
     this.init = function(){
         this.appearanceMaps = [];
         this.interactionMaps = [];
@@ -636,6 +639,7 @@ function World(iStart, jStart){
         this.interactionMap = this.interactionMaps[this.iWorld][this.jWorld];
     }
 
+    // Update world
     this.update = function(){
         if (player.x <= -player.width/2){
             this.jWorld -= 1;
@@ -677,14 +681,15 @@ function World(iStart, jStart){
 #################
 */
 
-function Tile(codeAppearance, codeInteraction, x, y){
+function Tile(codeAppearance, codeInteraction, i, j){
+    // Initialize tile
     this.init = function(){
         var codeAppearanceList = codeAppearance.split("_");
-        this.type = codeAppearanceList[0];
-        this.dir = codeAppearanceList[1];
-        this.codeInteraction = codeInteraction;
-        this.x = x;
-        this.y = y;
+        this.type              = codeAppearanceList[0];
+        this.dir               = codeAppearanceList[1];
+        this.codeInteraction   = codeInteraction;
+        this.x                 = j*TILE_DIM;
+        this.y                 = i*TILE_DIM;
 
         // Random numbers for tiles that use them
         this.rng1 = Math.random();
@@ -699,9 +704,9 @@ function Tile(codeAppearance, codeInteraction, x, y){
         this.b1 = 255;
 
         // Walk-over effect parameters
-        this.walkOverStart = false;
+        this.walkOverStart  = false;
         this.walkOverEffect = false;
-        this.walkOverAlpha = 0;
+        this.walkOverAlpha  = 0;
 
         // Tile properties and color ranges
         switch (this.type){
@@ -888,6 +893,7 @@ function Tile(codeAppearance, codeInteraction, x, y){
         this.bt = this.getRandomColorValue(this.b0, this.b1);
     }
 
+    // Draw tile
     this.draw = function(){
         // Draw tile according to type
         switch (this.type){
@@ -1447,24 +1453,29 @@ function Tile(codeAppearance, codeInteraction, x, y){
         }
     }
 
+    // Set walk-over values
     this.walkOver = function(){
-        this.walkOverStart = true;
+        this.walkOverStart  = true;
         this.walkOverEffect = true;
-        this.walkOverAlpha = 100;
+        this.walkOverAlpha  = 100;
     }
 
+    // Return random color value given a range
     this.getRandomColorValue = function(v0, v1){
         return v0 + parseInt(Math.random() * (v1 - v0));
     }
 
+    // Return RGB values
     this.getRGB = function(){
         return "rgb(" + this.r + "," + this.g + "," + this.b + ")";
     }
 
+    // Clear tile
     this.clear = function(){
         bg.clearRect(this.x, this.y, TILE_DIM, TILE_DIM);
     }
 
+    // Update tile
     this.update = function(){
         // Redraw
         if (this.redraw){
@@ -1512,17 +1523,19 @@ function Tile(codeAppearance, codeInteraction, x, y){
     this.init();
 }
 
+// Initialize tiles
 function initTiles(){
     tiles = [];
     for (var i=0; i<NUM_TILES; i++){
         tiles.push([]);
         for (var j=0; j<NUM_TILES; j++){
-            var tile = new Tile(world.appearanceMap[i][j], world.interactionMap[i][j], j * TILE_DIM, i * TILE_DIM);
+            var tile = new Tile(world.appearanceMap[i][j], world.interactionMap[i][j], i, j);
             tiles[i].push(tile);
         }
     }
 }
 
+// Draw tiles
 function drawTiles(){
     for (var i=0; i<NUM_TILES; i++){
         for (var j=0; j<NUM_TILES; j++){
@@ -1531,6 +1544,7 @@ function drawTiles(){
     }
 }
 
+// Update tiles
 function updateTiles(){
     for (var i=0; i<NUM_TILES; i++){
         for (var j=0; j<NUM_TILES; j++){
@@ -1539,6 +1553,7 @@ function updateTiles(){
     }
 }
 
+// Clear tiles
 function clearTiles(){
     for (var i=0; i<NUM_TILES; i++){
         for (var j=0; j<NUM_TILES; j++){
@@ -1547,6 +1562,7 @@ function clearTiles(){
     }
 }
 
+// Return walkable status
 function isWalkable(x, y){
     var val;
     if (x <= 0 || x >= STAGE_DIM || y <= 0 || y >= STAGE_DIM){
@@ -1559,12 +1575,14 @@ function isWalkable(x, y){
     return val;
 }
 
+// Return interaction code
 function getCodeInteraction(x, y){
     var i = parseInt(y / TILE_DIM);
     var j = parseInt(x / TILE_DIM);
     return tiles[i][j].codeInteraction;
 }
 
+// Return interaction status
 function isInteractive(x, y){
     var val;
     if (x <= 0 || x >= STAGE_DIM || y <= 0 || y >= STAGE_DIM){
@@ -1581,26 +1599,29 @@ function isInteractive(x, y){
 ##################
 */
 
-function Player(x, y){
+function Player(iStart, jStart){
+    // Initialize player
     this.init = function(){
-        this.x = x;
-        this.y = y;
-        this.width = PLAYER_DIM;
-        this.height = PLAYER_DIM;
-        this.xSpeed = 2;
-        this.ySpeed = 2;
-        this.isMovingLeft = false;
+        this.x             = jStart*TILE_DIM + TILE_DIM/2 - PLAYER_DIM/2;
+        this.y             = iStart*TILE_DIM + TILE_DIM/2 - PLAYER_DIM/2;
+        this.width         = PLAYER_DIM;
+        this.height        = PLAYER_DIM;
+        this.xSpeed        = 2;
+        this.ySpeed        = 2;
+        this.isMovingLeft  = false;
         this.isMovingRight = false;
-        this.isMovingUp = false;
-        this.isMovingDown = false;
-        this.canInteract = false;
-        this.onTreasure = false;
+        this.isMovingUp    = false;
+        this.isMovingDown  = false;
+        this.canInteract   = false;
+        this.onTreasure    = false;
     }
 
+    // Clear player
     this.clear = function(){
         fg.clearRect(0, 0, STAGE_DIM, STAGE_DIM);
     }
 
+    // Draw player
     this.draw = function(){
         fg.fillStyle = COL_BLACK;
         fg.fillRect(this.x, this.y, this.width, this.height);
@@ -1608,6 +1629,7 @@ function Player(x, y){
         fg.fillRect(this.x + 2, this.y + 2, this.width - 4, this.height - 4);
     }
 
+    // Update player
     this.update = function(){
         // Update position
         if (this.isMovingLeft){
@@ -1642,6 +1664,7 @@ function Player(x, y){
                 }
             }
         }
+
         // Update interactive status
         if (isInteractive(this.x + this.width/2, this.y + this.height/2)){
             this.canInteract = true;
@@ -1668,30 +1691,33 @@ function Player(x, y){
 */
 
 function Cloud(){
+    // Initialize cloud
     this.init = function(){
-        this.rng = Math.random();
-        this.scale = 0.5 + Math.random();
-        this.width = this.scale * CLOUD_WIDTH;
+        this.rng    = Math.random();
+        this.scale  = 0.5 + Math.random();
+        this.width  = this.scale * CLOUD_WIDTH;
         this.height = this.scale * CLOUD_HEIGHT;
-        this.x = (Math.random() * (STAGE_DIM + this.width)) - this.width;
-        this.y = (Math.random() * STAGE_DIM) - this.height/2;
+        this.x      = (Math.random() * (STAGE_DIM + this.width)) - this.width;
+        this.y      = (Math.random() * STAGE_DIM) - this.height/2;
         this.xSpeed = 0.25 + (0.75 * Math.random());
-        this.alpha = 0.75 + (0.25 * Math.random());
+        this.alpha  = 0.75 + (0.25 * Math.random());
     }
 
+    // Reset cloud
     this.reset = function(){
-        this.rng = Math.random();
-        this.scale = 0.5 + Math.random();
-        this.width = this.scale * CLOUD_WIDTH;
+        this.rng    = Math.random();
+        this.scale  = 0.5 + Math.random();
+        this.width  = this.scale * CLOUD_WIDTH;
         this.height = this.scale * CLOUD_HEIGHT;
-        this.x = -this.width;
-        this.y = (Math.random() * STAGE_DIM) - this.height/2;
+        this.x      = -this.width;
+        this.y      = (Math.random() * STAGE_DIM) - this.height/2;
         this.xSpeed = 0.25 + (0.75 * Math.random());
-        this.alpha = 0.75 + (0.25 * Math.random());
+        this.alpha  = 0.75 + (0.25 * Math.random());
     }
 
+    // Draw cloud
     this.draw = function(){
-        // Draw cloud
+        // Draw cloud itself
         var imgCloudsXPos;
         cg.globalAlpha = this.alpha;
         if (this.rng < 0.33){
@@ -1708,6 +1734,7 @@ function Cloud(){
         sg.drawImage(imgCloudShadow, 0, 0, CLOUD_WIDTH, CLOUD_HEIGHT, this.x, this.y + 200, this.width, this.height);
     }
 
+    // Update cloud
     this.update = function(){
         this.x += this.xSpeed;
         if (this.x >= STAGE_DIM){
@@ -1718,6 +1745,7 @@ function Cloud(){
     this.init();
 }
 
+// Initialize clouds
 function initClouds(){
     clouds = [];
     for (var i=0; i<NUM_CLOUDS; i++){
@@ -1726,18 +1754,21 @@ function initClouds(){
     }
 }
 
+// Draw clouds
 function drawClouds(){
     for (var i=0; i<NUM_CLOUDS; i++){
         clouds[i].draw();
     }
 }
 
+// Update clouds
 function updateClouds(){
     for (var i=0; i<NUM_CLOUDS; i++){
         clouds[i].update();
     }
 }
 
+// Clear clouds
 function clearClouds(){
     cg.clearRect(0, 0, STAGE_DIM, STAGE_DIM);
     sg.clearRect(0, 0, STAGE_DIM, STAGE_DIM);
@@ -1750,9 +1781,11 @@ function clearClouds(){
 */
 
 function Message(){
+    // Initialize message
     this.init = function(){
     }
 
+    // Draw message
     this.draw = function(){
         // Draw half-transparent black background
         mg.globalAlpha = 0.5;
@@ -1764,7 +1797,7 @@ function Message(){
         mg.fillStyle = COL_WHITE;
         mg.fillRect((STAGE_DIM - MESSAGE_WIDTH)/2, (STAGE_DIM - MESSAGE_HEIGHT)/2, MESSAGE_WIDTH, MESSAGE_HEIGHT);
 
-        // Draw message
+        // Draw message image
         var i = parseInt((player.y + player.height/2) / TILE_DIM);
         var j = parseInt((player.x + player.width/2) / TILE_DIM);
         var imgMessagesYPos;
@@ -1893,6 +1926,7 @@ function Message(){
         mg.drawImage(imgMessages, 0, imgMessagesYPos, MESSAGE_WIDTH, MESSAGE_HEIGHT, (STAGE_DIM - MESSAGE_WIDTH)/2, (STAGE_DIM - MESSAGE_HEIGHT)/2, MESSAGE_WIDTH, MESSAGE_HEIGHT);
     }
 
+    // Clear message
     this.clear = function(){
         mg.clearRect(0, 0, STAGE_DIM, STAGE_DIM);
     }
