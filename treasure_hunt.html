@@ -39,12 +39,17 @@ Message canvas
 ###   Audio   ###
 #################
 
-MP3 "Ahead on Our Way" obtained for free from https://downloads.khinsider.com/game-soundtracks/album/final-fantasy-vii-arranged-soundtrack-2016
+"Ahead on Our Way" obtained for free from https://downloads.khinsider.com/game-soundtracks/album/final-fantasy-vii-arranged-soundtrack-2016
+"Hard shovel stab" and "Winning notification" sound effects obtained for free from https://mixkit.co/free-sound-effects/garden/ and converted to MP3 format using https://cloudconvert.com/wav-to-mp3
 -->
 
+<!--
 <div id="divAudio" style="align-items: center; display: flex; justify-content: center; position: relative; margin: 0 auto; width: 600px;">
-<audio id="audioMP3" src="media/ahead_on_our_way.mp3" loop>
-</audio>
+-->
+<div id="divAudio" style="align-items: center; display: flex; justify-content: center; position: relative; margin: 0 auto; width: 600px;">
+<audio id="audioMusic"  src="media/ahead_on_our_way.mp3" loop></audio>
+<audio id="audioShovel" src="media/shovel.mp3"></audio>
+<audio id="audioWin"    src="media/win.mp3"></audio>
 </div>
 
 <!--
@@ -285,7 +290,6 @@ var appearanceMap_2_1 = [["tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "tr_0", "pa_1"
                          ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "be_5", "be_5", "be_5", "be_5", "be_5", "oc_0", "oc_0", "oc_0", "oc_0"],
                          ["oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0", "oc_0"]];
 
-
 /*
 ############################
 ###   Interaction maps   ###
@@ -484,7 +488,8 @@ function intro(){
     imgX.src           = "media/x.png";
 
     // Audio
-    var audioMP3 = document.getElementById("audioMP3");
+    var audioMusic  = document.getElementById("audioMusic");
+    var audioShovel = document.getElementById("audioShovel");
 
     // Event listeners
     window.addEventListener("keydown", onKeyDown);
@@ -542,19 +547,26 @@ function onKeyUp(e){
                 loopInterval = setInterval(loop, 1000/FPS);
 
                 // Play audio
-                audioMP3.play()
+                audioMusic.play();
                 break;
         }
     } else if (gameState == "walk"){
         switch (e.keyCode){
             case 32: // Space bar
                 if (player.canInteract){
-                    player.isMovingLeft = false;
+                    player.isMovingLeft  = false;
                     player.isMovingRight = false;
-                    player.isMovingUp = false;
-                    player.isMovingDown = false;
-                    gameState = "message";
+                    player.isMovingUp    = false;
+                    player.isMovingDown  = false;
+                    gameState            = "message";
                     message.draw();
+                }
+                if (player.onTreasure){
+                    audioWin.currentTime = 0;
+                    audioWin.play();
+                } else if (! player.canInteract) {
+                    audioShovel.currentTime = 0;
+                    audioShovel.play();
                 }
                 break;
             case 37: // Left arrow
@@ -1678,6 +1690,7 @@ function Player(iStart, jStart){
             }
         } else {
             this.canInteract = false;
+            this.onTreasure  = false;
         }
     }
 
