@@ -110,6 +110,11 @@ var imgMonument;
 var imgShip;
 var imgX;
 
+// Audio
+var audioMusic;
+var audioShovel;
+var audioWin;
+
 // Game state, canvases, and other objects
 var gameState;
 var loopInterval;
@@ -485,9 +490,9 @@ function intro(){
     imgX.src           = "media/x.png";
 
     // Audio
-    var audioMusic  = document.getElementById("audioMusic");
-    var audioShovel = document.getElementById("audioShovel");
-    var audioWin    = document.getElementById("audioWin");
+    audioMusic  = document.getElementById("audioMusic");
+    audioShovel = document.getElementById("audioShovel");
+    audioWin    = document.getElementById("audioWin");
 
     // Event listeners
     window.addEventListener("keydown", onKeyDown);
