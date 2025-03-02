@@ -442,34 +442,34 @@ function intro(){
     gameState = "intro";
 
     // Background canvas
-    var canvasBG = document.getElementById("canvasBG");
-    canvasBG.width = STAGE_DIM;
+    var canvasBG    = document.getElementById("canvasBG");
+    canvasBG.width  = STAGE_DIM;
     canvasBG.height = STAGE_DIM;
-    bg = canvasBG.getContext('2d');
+    bg              = canvasBG.getContext('2d');
 
     // Foreground canvas
-    var canvasFG = document.getElementById("canvasFG");
-    canvasFG.width = STAGE_DIM;
+    var canvasFG    = document.getElementById("canvasFG");
+    canvasFG.width  = STAGE_DIM;
     canvasFG.height = STAGE_DIM;
-    fg = canvasFG.getContext('2d');
+    fg              = canvasFG.getContext('2d');
 
     // Cloud shadow canvas
-    var canvasSG = document.getElementById("canvasSG");
-    canvasSG.width = STAGE_DIM;
+    var canvasSG    = document.getElementById("canvasSG");
+    canvasSG.width  = STAGE_DIM;
     canvasSG.height = STAGE_DIM;
-    sg = canvasSG.getContext('2d');
+    sg              = canvasSG.getContext('2d');
 
     // Cloud canvas
-    var canvasCG = document.getElementById("canvasCG");
-    canvasCG.width = STAGE_DIM;
+    var canvasCG    = document.getElementById("canvasCG");
+    canvasCG.width  = STAGE_DIM;
     canvasCG.height = STAGE_DIM;
-    cg = canvasCG.getContext('2d');
+    cg              = canvasCG.getContext('2d');
 
     // Message canvas
-    var canvasMG = document.getElementById("canvasMG");
-    canvasMG.width = STAGE_DIM;
+    var canvasMG    = document.getElementById("canvasMG");
+    canvasMG.width  = STAGE_DIM;
     canvasMG.height = STAGE_DIM;
-    mg = canvasMG.getContext('2d');
+    mg              = canvasMG.getContext('2d');
 
     // Images
     imgClouds          = new Image();
