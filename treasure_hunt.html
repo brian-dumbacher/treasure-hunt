@@ -5,7 +5,7 @@
 <title>Treasure Hunt!</title>
 </head>
 
-<body bgcolor="#CCCCCC">
+<body style="background-color: #CCCCCC;">
 
 <!--
 ####################################
@@ -27,11 +27,11 @@ Message canvas
 -->
 
 <div id="divCanvases" style="position: relative; border: 2px solid black; margin: 0 auto; width: 600px; height: 600px;">
-<canvas id="canvasBG" style="z-index: 1; position: absolute; left: 0px; top: 0px;"></canvas>
-<canvas id="canvasFG" style="z-index: 2; position: absolute; left: 0px; top: 0px;"></canvas>
-<canvas id="canvasSG" style="z-index: 3; position: absolute; left: 0px; top: 0px;"></canvas>
-<canvas id="canvasCG" style="z-index: 4; position: absolute; left: 0px; top: 0px;"></canvas>
-<canvas id="canvasMG" style="z-index: 5; position: absolute; left: 0px; top: 0px;"></canvas>
+    <canvas id="canvasBG" style="z-index: 1; position: absolute; left: 0px; top: 0px;"></canvas>
+    <canvas id="canvasFG" style="z-index: 2; position: absolute; left: 0px; top: 0px;"></canvas>
+    <canvas id="canvasSG" style="z-index: 3; position: absolute; left: 0px; top: 0px;"></canvas>
+    <canvas id="canvasCG" style="z-index: 4; position: absolute; left: 0px; top: 0px;"></canvas>
+    <canvas id="canvasMG" style="z-index: 5; position: absolute; left: 0px; top: 0px;"></canvas>
 </div>
 
 <!--
@@ -44,9 +44,9 @@ Message canvas
 -->
 
 <div id="divAudio" style="align-items: center; display: flex; justify-content: center; position: relative; margin: 0 auto; width: 600px;">
-<audio id="audioMusic"  src="media/ahead_on_our_way.mp3" loop></audio>
-<audio id="audioShovel" src="media/shovel.mp3"></audio>
-<audio id="audioWin"    src="media/win.mp3"></audio>
+    <audio id="audioMusic"  src="media/ahead_on_our_way.mp3" preload="auto" loop></audio>
+    <audio id="audioShovel" src="media/shovel.mp3" preload="auto"></audio>
+    <audio id="audioWin"    src="media/win.mp3" preload="auto"></audio>
 </div>
 
 <!--
@@ -56,7 +56,24 @@ Message canvas
 -->
 
 <div id="divInstruct" style="margin: 0 auto; text-align: left; width: 600px;">
-<p id="textInstruct" style="font-family: arial;">You and your fellow townspeople are on the hunt for buried treasure.  Explore your world, talk to others, and pick up clues.  Use the arrow keys to move.  Use the space bar to interact with the environment and to dig for treasure.  Red visual cues indicate when you can interact, but you can dig anytime.  Press the space bar to begin your Treasure Hunt!</p>
+    <p id="textInstruct" style="font-family: arial;">You and your fellow townspeople are on the hunt for buried treasure.  Explore your world, talk to others, and pick up clues.  Use the arrow keys to move.  Use the space bar to interact with the environment and to dig for treasure.  Red visual cues indicate when you can interact, but you can dig anytime.  Press Space to begin your Treasure Hunt!</p>
+</div>
+
+<!--
+#########################
+###   Hidden Images   ###
+#########################
+-->
+
+<div id="divHiddenImages">
+    <img id="imageCloudShadow" src="media/cloud_shadow.png" style="display: none;">
+    <img id="imageClouds"      src="media/clouds.png"       style="display: none;">
+    <img id="imageGrass"       src="media/grass.png"        style="display: none;">
+    <img id="imageIntro"       src="media/intro.png"        style="display: none;">
+    <img id="imageMessages"    src="media/messages.png"     style="display: none;">
+    <img id="imageMonument"    src="media/monument.png"     style="display: none;">
+    <img id="imageShip"        src="media/ship.png"         style="display: none;">
+    <img id="imageX"           src="media/x.png"            style="display: none;">
 </div>
 
 <script type="text/javascript">
@@ -67,7 +84,7 @@ Message canvas
 ##########################################
 */
 
-// On-load function
+// Window onload function
 window.onload = intro;
 
 // Dimensions
@@ -472,23 +489,16 @@ function intro(){
     mg              = canvasMG.getContext('2d');
 
     // Images
-    imgClouds          = new Image();
-    imgClouds.src      = "media/clouds.png";
-    imgCloudShadow     = new Image();
-    imgCloudShadow.src = "media/cloud_shadow.png";
-    imgGrass           = new Image();
-    imgGrass.src       = "media/grass.png";
-    imgIntro           = new Image();
-    imgIntro.src       = "media/intro.png";
-    imgIntro.onload    = function(){bg.drawImage(imgIntro, 0, 0, STAGE_DIM, STAGE_DIM, 0, 0, STAGE_DIM, STAGE_DIM);}
-    imgMessages        = new Image();
-    imgMessages.src    = "media/messages.png";
-    imgMonument        = new Image();
-    imgMonument.src    = "media/monument.png";
-    imgShip            = new Image();
-    imgShip.src        = "media/ship.png";
-    imgX               = new Image();
-    imgX.src           = "media/x.png";
+    imgClouds      = document.getElementById("imageClouds");
+    imgCloudShadow = document.getElementById("imageCloudShadow");
+    imgGrass       = document.getElementById("imageGrass");
+    imgIntro       = document.getElementById("imageIntro");
+    imgMessages    = document.getElementById("imageMessages");
+    imgMonument    = document.getElementById("imageMonument");
+    imgShip        = document.getElementById("imageShip");
+    imgX           = document.getElementById("imageX");
+
+    bg.drawImage(imgIntro, 0, 0, STAGE_DIM, STAGE_DIM, 0, 0, STAGE_DIM, STAGE_DIM);
 
     // Audio
     audioMusic  = document.getElementById("audioMusic");
